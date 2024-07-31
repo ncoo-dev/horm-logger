@@ -6,12 +6,7 @@ use Illuminate\Http\Client\Events\ConnectionFailed;
 
 class HormLogConnectionFailed
 {
-    public function __construct()
-    {
+    public function __construct() {}
 
-    }
-
-    public function handle(ConnectionFailed $response)
-    {
-    }
+    public function handle(ConnectionFailed $response) {}
 }
