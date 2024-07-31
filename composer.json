@@ -15,7 +15,9 @@
         }
     ],
     "require": {
-        "php": "^8.1"
+        "php": "^8.1",
+        "illuminate/support": "^11.18",
+        "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
         "pestphp/pest": "^2.20",
@@ -45,5 +47,15 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NcooDev\\HormLogger\\HormLoggerServiceProvider"
+            ]
+        },
+        "aliases": {
+            "Horm": "NcooDev\\HormLogger\\Facade"
+        }
+    }
 }
