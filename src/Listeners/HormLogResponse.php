@@ -6,12 +6,7 @@ use Illuminate\Http\Client\Events\ResponseReceived;
 
 class HormLogResponse
 {
-    public function __construct()
-    {
+    public function __construct() {}
 
-    }
-
-    public function handle(ResponseReceived $response)
-    {
-    }
+    public function handle(ResponseReceived $response) {}
 }

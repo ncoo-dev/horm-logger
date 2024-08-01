@@ -20,8 +20,12 @@
         "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
-        "pestphp/pest": "^2.20",
+        "laravel/framework": "^11.19",
+        "laravel/laravel": "^11.1",
         "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.2",
+        "pestphp/pest": "^2.20",
+        "pestphp/pest-plugin-laravel": "^2.4",
         "spatie/ray": "^1.28"
     },
     "autoload": {

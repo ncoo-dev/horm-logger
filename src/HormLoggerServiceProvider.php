@@ -14,10 +14,9 @@ class HormLoggerServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('horm-logger')
-            ->hasConfigFile('horm')
-//            ->hasMigration()
-//            ->hasCommand()
-        ;
+            ->hasConfigFile('horm');
+        //            ->hasMigration()
+        //            ->hasCommand()
     }
 
     public function packageBooted(): void
