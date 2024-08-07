@@ -8,8 +8,8 @@ class CreateHormEntriesTable extends Migration
 {
     public function up()
     {
-        Schema::connection(config('horm.database_connection'))->create(config('horm.table_name'), function (Blueprint $table) {
-            $table->uuid();
+        Schema::connection(config('horm.database.connection'))->create(config('horm.database.table_name'), function (Blueprint $table) {
+            $table->uuid('id');
             $table->string('direction')->default('outgoing');
             $table->string('url')->nullable();
             $table->string('type')->default('response');
@@ -30,6 +30,6 @@ class CreateHormEntriesTable extends Migration
 
     public function down()
     {
-        Schema::connection(config('horm.database_connection'))->dropIfExists(config('horm.table_name'));
+        Schema::connection(config('horm.database.connection'))->dropIfExists(config('horm.database.table_name'));
     }
 }

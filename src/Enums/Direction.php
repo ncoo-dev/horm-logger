@@ -1,6 +1,6 @@
 <?php
 
-namespace NcooDev\HormLogger;
+namespace NcooDev\HormLogger\Enums;
 
 enum Direction: string
 {

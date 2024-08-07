@@ -3,15 +3,18 @@
 namespace NcooDev\HormLogger\Tests;
 
 use Illuminate\Encryption\Encrypter;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
-
+        //        \Illuminate\Support\Facades\Event::fake();
         $this->setUpDatabase();
     }
 

@@ -1,0 +1,35 @@
+<?php
+
+namespace NcooDev\HormLogger\Dtos;
+
+class Response
+{
+    public function __construct(
+        public array $headers,
+        public int $status,
+        public ?string $times,
+    ) {}
+
+    public static function fromHttpResponse(\Illuminate\Http\Client\Response $response): self
+    {
+        return new self(
+            headers: $response->headers(),
+            status: $response->status(),
+            times: $response->transferStats?->getTransferTime(),
+        );
+    }
+
+    public static function fromDB(string $reponse): self
+    {
+        return unserialize(base64_decode($reponse));
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'headers' => $this->headers,
+            'status' => $this->status,
+            'times' => $this->times,
+        ];
+    }
+}

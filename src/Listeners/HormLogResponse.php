@@ -3,7 +3,8 @@
 namespace NcooDev\HormLogger\Listeners;
 
 use Illuminate\Http\Client\Events\ResponseReceived;
-use Illuminate\Support\Facades\Log;
+use NcooDev\HormLogger\Dtos\Response;
+use NcooDev\HormLogger\HormLoggerServiceProvider;
 
 class HormLogResponse
 {
@@ -11,11 +12,15 @@ class HormLogResponse
 
     public function handle(ResponseReceived $response)
     {
-        //        Log::info('Response received', [
-        //            'url' => $response->request->url(),
-        //            'status' => $response->response->status(),
-        //            'body' => $response->response->body(),
-        //        ]);
-        Log::info('serializé : '.base64_encode(serialize($response->response)));
+        (HormLoggerServiceProvider::determineEntryModel())::create([
+            'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
+            'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
+            'url' => $response->request->url(),
+            'status_code' => $response->response->status(),
+            'method' => $response->request->method(),
+            'request' => base64_encode(serialize($response->request)),
+            'response' => base64_encode(serialize(Response::fromHttpResponse($response->response))),
+            'content' => base64_encode(serialize($response->response->body())),
+        ]);
     }
 }
