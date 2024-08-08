@@ -10,13 +10,23 @@ class Response
         public ?string $times,
     ) {}
 
-    public static function fromHttpResponse(\Illuminate\Http\Client\Response $response): self
+    public static function fromHttpClientResponse(\Illuminate\Http\Client\Response $response): self
     {
         return new self(
             headers: $response->headers(),
             status: $response->status(),
             times: $response->transferStats?->getTransferTime(),
         );
+    }
+
+    public static function fromHttpResponse(\Illuminate\Http\Response $response, ?int $times = null): self
+    {
+        return new self(
+            headers: $response->headers->all(),
+            status: $response->status(),
+            times: $times,
+        );
+
     }
 
     public static function fromDB(string $reponse): self

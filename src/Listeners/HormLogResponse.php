@@ -19,7 +19,7 @@ class HormLogResponse
             'status_code' => $response->response->status(),
             'method' => $response->request->method(),
             'request' => base64_encode(serialize($response->request)),
-            'response' => base64_encode(serialize(Response::fromHttpResponse($response->response))),
+            'response' => base64_encode(serialize(Response::fromHttpClientResponse($response->response))),
             'content' => base64_encode(serialize($response->response->body())),
         ]);
     }

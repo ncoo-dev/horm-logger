@@ -8,4 +8,9 @@ return [
     'model' => [
         'entry' => \NcooDev\HormLogger\Models\Entry::class,
     ],
+    'horm_endpoint' => [
+        'enabled' => true,
+        'secret' => 'my-little-secret-with-horm',
+        'url' => 'horm-logger-get-entries',
+    ],
 ];

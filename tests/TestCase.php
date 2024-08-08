@@ -2,6 +2,7 @@
 
 namespace NcooDev\HormLogger\Tests;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
@@ -16,6 +17,10 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
         //        \Illuminate\Support\Facades\Event::fake();
         $this->setUpDatabase();
+        Factory::guessFactoryNamesUsing(
+            fn (string $modelName) => 'NcooDev\\Horm\\Database\\Factories\\'.class_basename($modelName).'Factory'
+        );
+
     }
 
     protected function getPackageProviders($app)
@@ -27,7 +32,7 @@ abstract class TestCase extends OrchestraTestCase
 
     public function getEnvironmentSetUp($app)
     {
-        config()->set('activitylog.database_connection', 'sqlite');
+        config()->set('horm.database_connection', 'sqlite');
         config()->set('database.default', 'sqlite');
         config()->set('database.connections.sqlite', [
             'driver' => 'sqlite',
@@ -57,5 +62,10 @@ abstract class TestCase extends OrchestraTestCase
     public function markTestAsPassed(): void
     {
         $this->assertTrue(true);
+    }
+
+    public function refreshServiceProvider(): void
+    {
+        (new HormLoggerServiceProvider($this->app))->packageBooted();
     }
 }

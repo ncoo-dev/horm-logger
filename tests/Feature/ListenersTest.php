@@ -4,8 +4,11 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use NcooDev\HormLogger\Dtos\Request;
 use NcooDev\HormLogger\Dtos\Response;
 use NcooDev\HormLogger\Models\Entry;
+
+use function Pest\Laravel\get;
 
 describe('connection exception', function () {
     beforeEach(function () {
@@ -79,7 +82,7 @@ describe('listeners', function () {
                 'status_code' => 400,
                 'method' => 'GET',
                 'request' => base64_encode(serialize($request)),
-                'response' => base64_encode(serialize(Response::fromHttpResponse($response))),
+                'response' => base64_encode(serialize(Response::fromHttpClientResponse($response))),
                 'content' => base64_encode(serialize('error')),
             ])
             ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
@@ -88,7 +91,7 @@ describe('listeners', function () {
             ->and($entry->status_code)->toBe(400)
             ->and($entry->method)->toBe('GET')
             ->and($entry->request)->toBe(base64_encode(serialize($request)))
-            ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpResponse($response))))
+            ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpClientResponse($response))))
             ->and($entry->content)->toBe(base64_encode(serialize('error')));
 
     });
@@ -111,7 +114,7 @@ describe('listeners', function () {
                 'status_code' => 200,
                 'method' => 'GET',
                 'request' => base64_encode(serialize($request)),
-                'response' => base64_encode(serialize(Response::fromHttpResponse($response))),
+                'response' => base64_encode(serialize(Response::fromHttpClientResponse($response))),
                 'content' => base64_encode(serialize('success')),
             ])
             ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
@@ -120,9 +123,46 @@ describe('listeners', function () {
             ->and($entry->status_code)->toBe(200)
             ->and($entry->method)->toBe('GET')
             ->and($entry->request)->toBe(base64_encode(serialize($request)))
-            ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpResponse($response))))
+            ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpClientResponse($response))))
             ->and($entry->content)->toBe(base64_encode(serialize('success')));
 
     });
 
+});
+
+test('the middleware in isolation', function () {
+    expect(Entry::all())->toBeEmpty();
+    $generatedRequest = createRequest('GET', '/test');
+    (new \NcooDev\HormLogger\Middleware\SaveLog)->handle($generatedRequest, function ($request) {
+        return response('test', 404);
+    });
+    expect(Entry::all())->not->toBeEmpty();
+    $entry = Entry::first();
+    expect($entry)->toBeInstanceOf(config('horm.model.entry'))
+        ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
+        ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::INCOMING)
+        ->and($entry->url)->toBe('http://localhost/test')
+        ->and($entry->status_code)->toBe(404)
+        ->and($entry->method)->toBe('GET')
+        ->and(Request::fromDB($entry->request))->toEqual(Request::fromHttpRequest($generatedRequest))
+        ->and(Response::fromDB($entry->response))->toEqual(Response::fromHttpResponse(response('test', 404), 0))
+        ->and($entry->content)->toBe(base64_encode(serialize('test')));
+
+});
+
+test('the middleware in full app', function () {
+    expect(Entry::all())->toBeEmpty();
+
+    \Illuminate\Support\Facades\Route::get('/testmiddleware', function () {
+        return response('test', 200);
+    });
+
+    $response = get('/testmiddleware');
+    expect(Entry::all())->toBeEmpty();
+
+    \Illuminate\Support\Facades\Route::middleware(\NcooDev\HormLogger\Middleware\SaveLog::class)->get('/testmiddleware', function () {
+        return response('test', 200);
+    });
+    $response = get('/testmiddleware');
+    expect(Entry::all())->not->toBeEmpty();
 });

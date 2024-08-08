@@ -3,7 +3,10 @@
 namespace NcooDev\HormLogger\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
+use NcooDev\HormLogger\Database\Factories\EntryFactory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
 
@@ -11,7 +14,9 @@ class Entry extends Model
 {
     protected $guarded = [];
 
+    use HasFactory;
     use HasUuids;
+    use MassPrunable;
 
     protected $casts = [
         'type' => EntryType::class,
@@ -19,9 +24,29 @@ class Entry extends Model
         'direction' => Direction::class,
     ];
 
-    public function __construct(array $attributes = [])
+    public function getConnectionName(): string
+    {
+        return $this->connection ?:
+            config('horm.database.connection') ?:
+                config('database.default');
+    }
+
+    protected static function newFactory(): EntryFactory
+    {
+        return EntryFactory::new();
+    }
+
+    public function getTable(): mixed
     {
         $this->table = config('horm.database.table_name');
-        parent::__construct($attributes);
+
+        return $this->table;
+    }
+
+    public function prunable(): Builder
+    {
+        $days = config('horm.entries.keep_history_for_days') ?? 2;
+
+        return static::where('created_at', '<=', now()->subDays($days));
     }
 }

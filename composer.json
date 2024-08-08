@@ -26,11 +26,13 @@
         "orchestra/testbench": "^9.2",
         "pestphp/pest": "^2.20",
         "pestphp/pest-plugin-laravel": "^2.4",
+        "spatie/pest-plugin-test-time": "^2.1",
         "spatie/ray": "^1.28"
     },
     "autoload": {
         "psr-4": {
-            "NcooDev\\HormLogger\\": "src"
+            "NcooDev\\HormLogger\\": "src",
+            "NcooDev\\HormLogger\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
