@@ -2,7 +2,8 @@
 
 namespace NcooDev\HormLogger\Events;
 
-use GuzzleHttp\Exception\RequestException;
+
+use Illuminate\Http\Client\RequestException;
 
 class RequestExceptionThrown
 {
