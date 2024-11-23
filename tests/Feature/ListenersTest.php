@@ -163,8 +163,8 @@ test('the middleware in full app', function () {
     \Illuminate\Support\Facades\Route::middleware(\NcooDev\HormLogger\Middleware\SaveLog::class)->get('/testmiddleware', function () {
         return response('test', 200);
     });
-//    $response = get('/testmiddleware');
-//    expect(Entry::all())->not->toBeEmpty();
+    //    $response = get('/testmiddleware');
+    //    expect(Entry::all())->not->toBeEmpty();
     Http::fake(['https://laravel.com' => Http::failedConnection()]);
     $response = get('https://laravel.com');
     dd($response);

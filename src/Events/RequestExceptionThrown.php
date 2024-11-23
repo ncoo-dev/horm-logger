@@ -2,7 +2,6 @@
 
 namespace NcooDev\HormLogger\Events;
 
-
 use Illuminate\Http\Client\RequestException;
 
 class RequestExceptionThrown
