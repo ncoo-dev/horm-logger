@@ -25,8 +25,10 @@ class HormLoggerServiceProvider extends PackageServiceProvider
         $package
             ->name('horm-logger')
             ->hasConfigFile('horm')
-            ->hasMigrations(['create_horm_entries_table']);
-        //            ->hasCommand()
+
+            ->hasMigrations(['create_horm_entries_table'])
+                    ->hasCommand(\NcooDev\HormLogger\Console\InstallCommand::class)
+        ;
     }
 
     public function packageBooted(): void

@@ -15,8 +15,6 @@ class SaveLog
     {
         $time = microtime(true);
 
-        // génère le code qui permet de sauvegarder les logs dans la base de données
-        // si cela genère une erreur, il faut lancer l'évènement RequestExceptionThrown et continuer le traitement de la requête
         try {
             $response = $next($request);
             $time = microtime(true) - $time;
@@ -36,9 +34,7 @@ class SaveLog
 
             return $response;
         } catch (RequestException $e) {
-
             Event::dispatch(new RequestExceptionThrown($e));
-            dd('ttt');
             throw $e;
         }
     }
