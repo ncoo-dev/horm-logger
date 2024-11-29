@@ -7,11 +7,9 @@ use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use NcooDev\HormLogger\Events\RequestExceptionThrown;
 use NcooDev\HormLogger\Exceptions\InvalidConfiguration;
 use NcooDev\HormLogger\Http\Controllers\EntryController;
 use NcooDev\HormLogger\Listeners\HormLogConnectionFailed;
-use NcooDev\HormLogger\Listeners\HormLogRequestException;
 use NcooDev\HormLogger\Listeners\HormLogResponse;
 use NcooDev\HormLogger\Middleware\RequiresSecret;
 use NcooDev\HormLogger\Models\Entry;
@@ -27,8 +25,7 @@ class HormLoggerServiceProvider extends PackageServiceProvider
             ->hasConfigFile('horm')
 
             ->hasMigrations(['create_horm_entries_table'])
-                    ->hasCommand(\NcooDev\HormLogger\Console\InstallCommand::class)
-        ;
+            ->hasCommand(\NcooDev\HormLogger\Console\InstallCommand::class);
     }
 
     public function packageBooted(): void

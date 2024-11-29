@@ -10,8 +10,8 @@ return [
         'keep_history_for_days' => 14,
     ],
     'endpoint' => [
-        'enabled' => env('HORM_ENDPOINT_ENABLED',true),
-        'secret' => env('HORM_ENDPOINT_SECRET','my-little-secret-with-horm'),
-        'url' => env('HORM_ENDPOINT_SECRET','horm-logger-get-entries'),
+        'enabled' => env('HORM_ENDPOINT_ENABLED', true),
+        'secret' => env('HORM_ENDPOINT_SECRET', 'my-little-secret-with-horm'),
+        'url' => env('HORM_ENDPOINT_SECRET', 'horm-logger-get-entries'),
     ],
 ];

@@ -2,14 +2,12 @@
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Events\ConnectionFailed;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use NcooDev\HormLogger\Dtos\Request;
 use NcooDev\HormLogger\Dtos\Response;
 use NcooDev\HormLogger\Models\Entry;
 
 use function Pest\Laravel\get;
-
 
 describe('listeners', function () {
 
@@ -20,7 +18,7 @@ describe('listeners', function () {
             'https://error-failed.com' => Http::failedConnection('Impossible de se connecter'),
             'https://error-failed2.com' => Http::response('error', 500, ['Headers']),
 
-            ]);
+        ]);
     });
 
     it('a connection failed can be call', function () {
@@ -28,16 +26,14 @@ describe('listeners', function () {
         expect(Entry::all())->toBeEmpty();
         try {
             Http::get('https://error-failed.com');
-        }
-        catch (ConnectionException){
+        } catch (ConnectionException) {
 
         } finally {
 
-
             $recorded = Http::recorded();
             [$request, $response] = $recorded[0];
-//        $connectionFailed = new ConnectionFailed($request, new ConnectionException('Foo'));
-//        (new \NcooDev\HormLogger\Listeners\HormLogConnectionFailed)->handle($connectionFailed);
+            //        $connectionFailed = new ConnectionFailed($request, new ConnectionException('Foo'));
+            //        (new \NcooDev\HormLogger\Listeners\HormLogConnectionFailed)->handle($connectionFailed);
 
             expect(Entry::all())->not->toBeEmpty();
             $entry = Entry::first();
@@ -164,6 +160,6 @@ test('the middleware in full app', function () {
     \Illuminate\Support\Facades\Route::middleware(\NcooDev\HormLogger\Middleware\SaveLog::class)->get('/testmiddleware', function () {
         return response('test', 200);
     });
-        $response = get('/testmiddleware');
-        expect(Entry::all())->not->toBeEmpty();
+    $response = get('/testmiddleware');
+    expect(Entry::all())->not->toBeEmpty();
 });

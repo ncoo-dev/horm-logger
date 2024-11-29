@@ -36,7 +36,7 @@ class InstallCommand extends Command
         $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-assets', '--force' => true]);
 
         $this->comment('Publishing Horm Configuration...');
-        $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-config','--force' => true]);
+        $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-config', '--force' => true]);
 
         $this->comment('Publishing Horm Migrations...');
         $this->call('vendor:publish', ['--tag' => 'horm-logger-migrations']);
