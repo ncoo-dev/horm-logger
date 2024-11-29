@@ -2,15 +2,16 @@
 
 return [
     'database' => [
-        'connection' => 'sqlite',
+        'connection' => env('HORM_DB_CONNECTION', null),
         'table_name' => 'horm_entries',
     ],
     'model' => [
         'entry' => \NcooDev\HormLogger\Models\Entry::class,
+        'keep_history_for_days' => 14,
     ],
-    'horm_endpoint' => [
-        'enabled' => true,
-        'secret' => 'my-little-secret-with-horm',
-        'url' => 'horm-logger-get-entries',
+    'endpoint' => [
+        'enabled' => env('HORM_ENDPOINT_ENABLED',true),
+        'secret' => env('HORM_ENDPOINT_SECRET','my-little-secret-with-horm'),
+        'url' => env('HORM_ENDPOINT_SECRET','horm-logger-get-entries'),
     ],
 ];

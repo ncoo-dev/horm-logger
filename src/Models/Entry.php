@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use NcooDev\HormLogger\Database\Factories\EntryFactory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
+use NcooDev\HormLogger\Exceptions\InvalidConfiguration;
 
 class Entry extends Model
 {
@@ -39,6 +41,7 @@ class Entry extends Model
     public function getTable(): mixed
     {
         $this->table = config('horm.database.table_name');
+        throw_if(empty($this->table), InvalidConfiguration::tableIsEmpty());
 
         return $this->table;
     }

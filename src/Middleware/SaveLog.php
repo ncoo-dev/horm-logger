@@ -15,7 +15,6 @@ class SaveLog
     {
         $time = microtime(true);
 
-        try {
             $response = $next($request);
             $time = microtime(true) - $time;
             $theRequest = Request::fromHttpRequest($request);
@@ -33,9 +32,5 @@ class SaveLog
             (HormLoggerServiceProvider::determineEntryModel())::create($log);
 
             return $response;
-        } catch (RequestException $e) {
-            Event::dispatch(new RequestExceptionThrown($e));
-            throw $e;
-        }
     }
 }

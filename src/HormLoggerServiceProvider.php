@@ -41,10 +41,6 @@ class HormLoggerServiceProvider extends PackageServiceProvider
             ConnectionFailed::class,
             HormLogConnectionFailed::class,
         );
-        Event::listen(
-            RequestExceptionThrown::class,
-            HormLogRequestException::class,
-        );
 
         $this->registerHormEndpoint();
 

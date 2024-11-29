@@ -13,7 +13,6 @@ class HormLogConnectionFailed
 
     public function handle(ConnectionFailed $connectionFailed)
     {
-//        dd('ttt');
         (HormLoggerServiceProvider::determineEntryModel())::create([
             'type' => EntryType::CONNECTION_FAILED,
             'direction' => Direction::OUTGOING,

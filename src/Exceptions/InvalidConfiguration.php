@@ -12,4 +12,9 @@ class InvalidConfiguration extends Exception
     {
         return new static("The given model class `{$className}` does not implement `".Entry::class.'` or it does not extend `'.Model::class.'`');
     }
+
+    public static function tableIsEmpty(): self
+    {
+        return new static("The horm.database.table_name config entry can't be empty");
+    }
 }
