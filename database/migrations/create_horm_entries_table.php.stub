@@ -17,7 +17,7 @@ class CreateHormEntriesTable extends Migration
             $table->text('request')->nullable();
             $table->text('response')->nullable();
             $table->integer('status_code')->nullable();
-            $table->string('content')->nullable();
+            $table->text('content')->nullable();
 
             $table->timestamps();
             $table->index('url');
