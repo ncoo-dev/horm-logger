@@ -1,0 +1,71 @@
+<?php
+
+namespace NcooDev\HormLogger\Tests;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Encryption\Encrypter;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use NcooDev\HormLogger\HormLoggerServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
+
+abstract class TestCase extends OrchestraTestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        //        \Illuminate\Support\Facades\Event::fake();
+        $this->setUpDatabase();
+        Factory::guessFactoryNamesUsing(
+            fn (string $modelName) => 'NcooDev\\Horm\\Database\\Factories\\'.class_basename($modelName).'Factory'
+        );
+
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [
+            HormLoggerServiceProvider::class,
+        ];
+    }
+
+    public function getEnvironmentSetUp($app)
+    {
+        config()->set('horm.database_connection', 'sqlite');
+        config()->set('database.default', 'sqlite');
+        config()->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+        ]);
+
+        config()->set('auth.providers.users.model', User::class);
+        config()->set('app.key', 'base64:'.base64_encode(
+            Encrypter::generateKey(config()['app.cipher'])
+        ));
+    }
+
+    protected function setUpDatabase()
+    {
+        $this->migrateHormTable();
+
+        //        $this->seedModels(Article::class, User::class);
+    }
+
+    protected function migrateHormTable()
+    {
+        require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
+
+        (new \CreateHormEntriesTable)->up();
+    }
+
+    public function markTestAsPassed(): void
+    {
+        $this->assertTrue(true);
+    }
+
+    public function refreshServiceProvider(): void
+    {
+        (new HormLoggerServiceProvider($this->app))->packageBooted();
+    }
+}

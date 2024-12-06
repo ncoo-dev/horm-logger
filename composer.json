@@ -1,48 +1,67 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "ncoo-dev/horm-logger",
+    "description": "Awesome package that allow to log HTTP Outbound Request for HORM",
     "keywords": [
-        ":vendor_name",
-        ":package_slug"
+        "ncoo-dev",
+        "horm-logger"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/ncoo-dev/horm-logger",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Dominique Thomas",
+            "email": "domthomas@ncoo-dev.com",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.1"
+        "php": "^8.1",
+        "illuminate/support": "^11.18",
+        "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
-        :require_dev_testing,
-        :require_dev_codestyle,
+        "laravel/framework": "^11.19",
+        "laravel/laravel": "^11.1",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.2",
+        "pestphp/pest": "^2.20",
+        "pestphp/pest-plugin-laravel": "^2.4",
+        "spatie/pest-plugin-test-time": "^2.1",
         "spatie/ray": "^1.28"
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src"
+            "NcooDev\\HormLogger\\": "src",
+            "NcooDev\\HormLogger\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "NcooDev\\HormLogger\\Tests\\": "tests"
         }
     },
     "scripts": {
-        :scripts_testing,
-        :scripts_codestyle
+        "test": "vendor/bin/pest",
+            "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            :plugins_testing,
+            "pestphp/pest-plugin": true,
             "phpstan/extension-installer": true
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NcooDev\\HormLogger\\HormLoggerServiceProvider"
+            ]
+        },
+        "aliases": {
+            "Horm": "NcooDev\\HormLogger\\Facade"
+        }
+    }
 }

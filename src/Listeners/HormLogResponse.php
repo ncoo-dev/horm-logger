@@ -1,0 +1,26 @@
+<?php
+
+namespace NcooDev\HormLogger\Listeners;
+
+use Illuminate\Http\Client\Events\ResponseReceived;
+use NcooDev\HormLogger\Dtos\Response;
+use NcooDev\HormLogger\HormLoggerServiceProvider;
+
+class HormLogResponse
+{
+    public function __construct() {}
+
+    public function handle(ResponseReceived $response)
+    {
+        (HormLoggerServiceProvider::determineEntryModel())::create([
+            'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
+            'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
+            'url' => $response->request->url(),
+            'status_code' => $response->response->status(),
+            'method' => $response->request->method(),
+            'request' => base64_encode(serialize($response->request)),
+            'response' => base64_encode(serialize(Response::fromHttpClientResponse($response->response))),
+            'content' => base64_encode(serialize($response->response->body())),
+        ]);
+    }
+}
