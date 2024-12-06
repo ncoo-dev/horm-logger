@@ -2,6 +2,14 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.0.1 - 2024-12-06
+
+### What's Changed
+
+* fix: database by @domthomas-dev in https://github.com/ncoo-dev/horm-logger/pull/3
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.0.0...1.0.1
+
 ## 1.0.0 - 2024-12-06
 
 First releases
