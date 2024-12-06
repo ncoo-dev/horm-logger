@@ -7,7 +7,7 @@ return [
     ],
     'model' => [
         'entry' => \NcooDev\HormLogger\Models\Entry::class,
-        'keep_history_for_days' => 14,
+        'keep_history_for_days' => 2,
     ],
     'endpoint' => [
         'enabled' => env('HORM_ENDPOINT_ENABLED', true),
