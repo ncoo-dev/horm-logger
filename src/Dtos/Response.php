@@ -2,7 +2,6 @@
 
 namespace NcooDev\HormLogger\Dtos;
 
-
 use Illuminate\Http\Client\Response as SymfonyResponse;
 
 class Response

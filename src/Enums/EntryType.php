@@ -2,7 +2,6 @@
 
 namespace NcooDev\HormLogger\Enums;
 
-
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -14,12 +13,13 @@ enum EntryType: string
 
     public static function byResponseStatut(Response|\Illuminate\Http\Client\Response|JsonResponse $response): EntryType
     {
-        if($response->status() === 0){
+        if ($response->status() === 0) {
             return self::CONNECTION_FAILED;
         }
-        if($response->status() >= 400){
+        if ($response->status() >= 400) {
             return self::REQUEST_FAILED;
         }
+
         return self::RESPONSE;
     }
 }
