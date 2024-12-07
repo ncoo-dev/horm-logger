@@ -2,7 +2,6 @@
 
 namespace NcooDev\HormLogger\Dtos;
 
-
 use Illuminate\Http\JsonResponse;
 
 class Response
