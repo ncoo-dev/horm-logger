@@ -3,7 +3,7 @@
 namespace NcooDev\HormLogger\Dtos;
 
 
-use Illuminate\Http\Client\Response as SymfonyResponse;
+use Illuminate\Http\JsonResponse;
 
 class Response
 {
@@ -13,7 +13,7 @@ class Response
         public ?string $times,
     ) {}
 
-    public static function fromHttpClientResponse(SymfonyResponse $response): self
+    public static function fromHttpClientResponse(\Illuminate\Http\Client\Response|JsonResponse $response): self
     {
         return new self(
             headers: $response->headers(),
@@ -22,7 +22,7 @@ class Response
         );
     }
 
-    public static function fromHttpResponse(SymfonyResponse $response, ?int $times = null): self
+    public static function fromHttpResponse(\Illuminate\Http\Client\Response|JsonResponse $response, ?int $times = null): self
     {
         return new self(
             headers: $response->headers->all(),
