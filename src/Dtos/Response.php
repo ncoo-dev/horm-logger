@@ -2,6 +2,9 @@
 
 namespace NcooDev\HormLogger\Dtos;
 
+
+use Illuminate\Http\Client\Response as SymfonyResponse;
+
 class Response
 {
     public function __construct(
@@ -10,7 +13,7 @@ class Response
         public ?string $times,
     ) {}
 
-    public static function fromHttpClientResponse(\Illuminate\Http\Client\Response $response): self
+    public static function fromHttpClientResponse(SymfonyResponse $response): self
     {
         return new self(
             headers: $response->headers(),
@@ -19,7 +22,7 @@ class Response
         );
     }
 
-    public static function fromHttpResponse(\Illuminate\Http\Response $response, ?int $times = null): self
+    public static function fromHttpResponse(SymfonyResponse $response, ?int $times = null): self
     {
         return new self(
             headers: $response->headers->all(),

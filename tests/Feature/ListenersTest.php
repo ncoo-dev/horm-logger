@@ -73,7 +73,7 @@ describe('listeners', function () {
         expect($entry)
             ->toBeInstanceOf(config('horm.model.entry'))
             ->toMatchArray([
-                'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE->value,
+                'type' => \NcooDev\HormLogger\Enums\EntryType::REQUEST_FAILED->value,
                 'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING->value,
                 'url' => 'https://bad.com/1',
                 'status_code' => 400,
@@ -82,7 +82,7 @@ describe('listeners', function () {
                 'response' => base64_encode(serialize(Response::fromHttpClientResponse($response))),
                 'content' => base64_encode(serialize('error')),
             ])
-            ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
+            ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::REQUEST_FAILED)
             ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::OUTGOING)
             ->and($entry->url)->toBe('https://bad.com/1')
             ->and($entry->status_code)->toBe(400)
@@ -136,7 +136,7 @@ test('the middleware in isolation', function () {
     expect(Entry::all())->not->toBeEmpty();
     $entry = Entry::first();
     expect($entry)->toBeInstanceOf(config('horm.model.entry'))
-        ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
+        ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::REQUEST_FAILED)
         ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::INCOMING)
         ->and($entry->url)->toBe('http://localhost/test')
         ->and($entry->status_code)->toBe(404)

@@ -17,7 +17,7 @@ class SaveLog
         $theRequest = Request::fromHttpRequest($request);
 
         $log = [
-            'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
+            'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response),
             'direction' => \NcooDev\HormLogger\Enums\Direction::INCOMING,
             'url' => $request->url(),
             'status_code' => $response->status(),

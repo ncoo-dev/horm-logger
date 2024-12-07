@@ -13,7 +13,7 @@ class HormLogResponse
     public function handle(ResponseReceived $response)
     {
         (HormLoggerServiceProvider::determineEntryModel())::create([
-            'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
+            'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response->response),
             'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
             'url' => $response->request->url(),
             'status_code' => $response->response->status(),
