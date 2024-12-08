@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::connection(config('horm.database.connection'))->table(config('horm.database.table_name'), function (Blueprint $table) {
+            $table->longText('request')->nullable()->change();
+            $table->longText('response')->nullable()->change();
+            $table->longText('content')->nullable()->change();
+        });
+    }
+
+    public function down()
+    {
+        Schema::connection(config('horm.database.connection'))->table(config('horm.database.table_name'), function (Blueprint $table) {
+            $table->text('request')->nullable()->change();
+            $table->text('response')->nullable()->change();
+            $table->text('content')->nullable()->change();
+        });
+    }
+};
