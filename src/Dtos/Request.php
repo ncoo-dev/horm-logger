@@ -14,7 +14,8 @@ class Request
 
     public static function fromHttpClientRequest(\Illuminate\Http\Client\Request $request): self
     {
-        dd($request->getUri, data_get($request,'uri'));
+        dd($request->getUri, data_get($request, 'uri'));
+
         return new self(
             headers: $request->headers(),
             uri: $request->uri(),
@@ -38,7 +39,7 @@ class Request
     public static function fromDB(string $request): self
     {
         $info = unserialize(base64_decode($request));
-        if(is_array($info)) {
+        if (is_array($info)) {
             return new self(
                 headers: $info['headers'],
                 method: $info['method'],
