@@ -6,6 +6,7 @@ class Request
 {
     public function __construct(
         public array $headers,
+        public array $uri,
         public string $method,
         public string $url,
         public ?string $body,
@@ -13,8 +14,10 @@ class Request
 
     public static function fromHttpClientRequest(\Illuminate\Http\Client\Request $request): self
     {
+        dd($request->getUri, data_get($request,'uri'));
         return new self(
-            headers: $request->headers->all(),
+            headers: $request->headers(),
+            uri: $request->uri(),
             method: $request->method(),
             url: $request->url(),
             body: $request->body(),
@@ -35,12 +38,20 @@ class Request
     public static function fromDB(string $request): self
     {
         $info = unserialize(base64_decode($request));
+        if(is_array($info)) {
+            return new self(
+                headers: $info['headers'],
+                method: $info['method'],
+                url: $info['url'],
+                body: $info['body'],
+            );
+        }
 
         return new self(
-            headers: $info['headers'],
-            method: $info['method'],
-            url: $info['url'],
-            body: $info['body'],
+            headers: $info->headers,
+            method: $info->method,
+            url: $info->url,
+            body: $info->getContent(),
         );
     }
 

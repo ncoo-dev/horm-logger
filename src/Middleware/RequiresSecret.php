@@ -14,7 +14,7 @@ class RequiresSecret
             abort(403, 'Secret header not set');
         }
 
-        if ($secret !== config('horm.horm_endpoint.secret')) {
+        if ($secret !== config('horm.endpoint.secret')) {
             abort(403, 'Incorrect secret');
         }
 

@@ -12,6 +12,6 @@ return [
     'endpoint' => [
         'enabled' => env('HORM_ENDPOINT_ENABLED', true),
         'secret' => env('HORM_ENDPOINT_SECRET', 'my-little-secret-with-horm'),
-        'url' => env('HORM_ENDPOINT_SECRET', 'horm-logger-get-entries'),
+        'url' => env('HORM_ENDPOINT_URL', 'horm-logger-get-entries'),
     ],
 ];
