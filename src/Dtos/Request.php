@@ -25,7 +25,7 @@ class Request
 
     public static function fromHttpRequest(\Illuminate\Http\Request $request): self
     {
-//        dd($request->uri());
+        //        dd($request->uri());
         return new self(
             headers: $request->headers->all(),
             uri: serialize($request->uri()),
