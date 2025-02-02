@@ -22,11 +22,37 @@ You can install the package via composer:
 composer require ncoo-dev/horm-logger
 ```
 
-## Usage
+## Prunning
+You should schedule the horm:prune Artisan command in your application's App\Console\Kernel class. 
+You are free to choose the appropriate interval at which this command should be run:
 
 ```php
-$skeleton = new NcooDev\HormLogger();
-echo $skeleton->echoPhrase('Hello, NcooDev!');
+/**
+* Define the application's command schedule.
+*
+* @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+* @return void
+  */
+  protected function schedule(Schedule $schedule)
+  {
+      $schedule->command('horm:prune')->daily();
+  }
+```
+
+Behind the scenes, the horm:prune command will use your configuration to know what logs to prune. 
+By default, it will keep all logs for 2 days. 
+You can change this behavior by publishing the configuration file:
+
+```bash
+
+```php
+return [
+    ...
+    'model' => [
+        'keep_history_for_days' => 2,
+    ],
+    ...
+];
 ```
 
 ## Testing
