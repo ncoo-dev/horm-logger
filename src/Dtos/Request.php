@@ -6,7 +6,7 @@ class Request
 {
     public function __construct(
         public array $headers,
-        public array $uri,
+        public string $uri,
         public string $method,
         public string $url,
         public ?string $body,
@@ -14,11 +14,9 @@ class Request
 
     public static function fromHttpClientRequest(\Illuminate\Http\Client\Request $request): self
     {
-        dd($request->getUri, data_get($request, 'uri'));
-
         return new self(
             headers: $request->headers(),
-            uri: $request->uri(),
+            uri: serialize($request->uri()),
             method: $request->method(),
             url: $request->url(),
             body: $request->body(),
@@ -27,8 +25,10 @@ class Request
 
     public static function fromHttpRequest(\Illuminate\Http\Request $request): self
     {
+//        dd($request->uri());
         return new self(
             headers: $request->headers->all(),
+            uri: serialize($request->uri()),
             method: $request->method(),
             url: $request->url(),
             body: $request->getContent(),

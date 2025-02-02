@@ -54,6 +54,11 @@ return [
     ...
 ];
 ```
+## Configuration
+
+```bash
+php artisan vendor:publish --provider="NcooDev\HormLogger\HormLoggerServiceProvider" --tag=horm-logger-config
+```
 
 ## Testing
 
