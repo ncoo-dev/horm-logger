@@ -28,7 +28,7 @@ describe('API', function () {
                 ['created_at' => now()->addMinutes(4)],
             )->create();
 
-        config()->set('horm.horm_endpoint', [
+        config()->set('horm.endpoint', [
             'enabled' => true,
             'secret' => 'my-secret',
             'url' => 'horm-my-url',

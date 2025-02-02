@@ -67,19 +67,18 @@ class HormLoggerServiceProvider extends PackageServiceProvider
 
     protected function registerHormEndpoint(): self
     {
-        if (! config('horm.horm_endpoint.enabled')) {
+        if (! config('horm.endpoint.enabled')) {
             return $this;
         }
 
-        if (! config('horm.horm_endpoint.secret')) {
+        if (! config('horm.endpoint.secret')) {
             return $this;
         }
 
-        if (! config('horm.horm_endpoint.url')) {
+        if (! config('horm.endpoint.url')) {
             return $this;
         }
-
-        Route::get(config('horm.horm_endpoint.url'), EntryController::class)
+        Route::get(config('horm.endpoint.url'), EntryController::class)
             ->middleware(RequiresSecret::class);
 
         return $this;

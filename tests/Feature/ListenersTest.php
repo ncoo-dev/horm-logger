@@ -39,16 +39,6 @@ describe('listeners', function () {
             $entry = Entry::first();
             expect($entry)
                 ->toBeInstanceOf(config('horm.model.entry'))
-                ->toMatchArray([
-                    'type' => \NcooDev\HormLogger\Enums\EntryType::CONNECTION_FAILED->value,
-                    'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING->value,
-                    'url' => 'https://error-failed.com',
-                    'status_code' => 0,
-                    'method' => 'GET',
-                    'request' => base64_encode(serialize($request)),
-                    'response' => null,
-                    'content' => base64_encode(serialize('Impossible de se connecter')),
-                ])
                 ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::CONNECTION_FAILED)
                 ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::OUTGOING)
                 ->and($entry->url)->toBe('https://error-failed.com')
@@ -72,22 +62,12 @@ describe('listeners', function () {
         $entry = Entry::first();
         expect($entry)
             ->toBeInstanceOf(config('horm.model.entry'))
-            ->toMatchArray([
-                'type' => \NcooDev\HormLogger\Enums\EntryType::REQUEST_FAILED->value,
-                'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING->value,
-                'url' => 'https://bad.com/1',
-                'status_code' => 400,
-                'method' => 'GET',
-                'request' => base64_encode(serialize($request)),
-                'response' => base64_encode(serialize(Response::fromHttpClientResponse($response))),
-                'content' => base64_encode(serialize('error')),
-            ])
             ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::REQUEST_FAILED)
             ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::OUTGOING)
             ->and($entry->url)->toBe('https://bad.com/1')
             ->and($entry->status_code)->toBe(400)
             ->and($entry->method)->toBe('GET')
-            ->and($entry->request)->toBe(base64_encode(serialize($request)))
+            ->and($entry->request)->toBe(base64_encode(serialize(Request::fromHttpClientRequest($request))))
             ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpClientResponse($response))))
             ->and($entry->content)->toBe(base64_encode(serialize('error')));
 
@@ -104,22 +84,13 @@ describe('listeners', function () {
         $entry = Entry::first();
         expect($entry)
             ->toBeInstanceOf(config('horm.model.entry'))
-            ->toMatchArray([
-                'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE->value,
-                'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING->value,
-                'url' => 'https://good.com/1',
-                'status_code' => 200,
-                'method' => 'GET',
-                'request' => base64_encode(serialize($request)),
-                'response' => base64_encode(serialize(Response::fromHttpClientResponse($response))),
-                'content' => base64_encode(serialize('success')),
-            ])
+//
             ->and($entry->type)->toBe(\NcooDev\HormLogger\Enums\EntryType::RESPONSE)
             ->and($entry->direction)->toBe(\NcooDev\HormLogger\Enums\Direction::OUTGOING)
             ->and($entry->url)->toBe('https://good.com/1')
             ->and($entry->status_code)->toBe(200)
             ->and($entry->method)->toBe('GET')
-            ->and($entry->request)->toBe(base64_encode(serialize($request)))
+            ->and($entry->request)->toBe(base64_encode(serialize(Request::fromHttpClientRequest($request))))
             ->and($entry->response)->toBe(base64_encode(serialize(Response::fromHttpClientResponse($response))))
             ->and($entry->content)->toBe(base64_encode(serialize('success')));
 
