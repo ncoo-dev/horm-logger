@@ -2,6 +2,15 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.0.8 - 2025-02-02
+
+### What's Changed
+
+* chore(deps): bump dependabot/fetch-metadata from 2.2.0 to 2.3.0 by @dependabot in https://github.com/ncoo-dev/horm-logger/pull/4
+* Fix request by @domthomas-dev in https://github.com/ncoo-dev/horm-logger/pull/5
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.0.7...1.0.8
+
 ## 1.0.7 - 2024-12-08
 
 **Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.0.6...1.0.7
