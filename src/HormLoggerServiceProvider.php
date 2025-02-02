@@ -29,8 +29,7 @@ class HormLoggerServiceProvider extends PackageServiceProvider
                 'update_texte_horm_entries_table',
             ])
             ->hasCommand(\NcooDev\HormLogger\Console\InstallCommand::class)
-            ->hasCommand(\NcooDev\HormLogger\Console\PruneCommand::class)
-        ;
+            ->hasCommand(\NcooDev\HormLogger\Console\PruneCommand::class);
     }
 
     public function packageBooted(): void

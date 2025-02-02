@@ -47,7 +47,7 @@ describe('API', function () {
     })->with([
         'bad-secret' => ['bad-secret', 403],
         'empty secret' => ['', 403],
-        'Good secret' => ['my-secret', 302], //argument attendu
+        'Good secret' => ['my-secret', 302], // argument attendu
     ]);
 
     it('cannot get entries without start', function () {
