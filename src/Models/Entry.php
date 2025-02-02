@@ -2,10 +2,12 @@
 
 namespace NcooDev\HormLogger\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use NcooDev\HormLogger\Database\Factories\EntryFactory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
