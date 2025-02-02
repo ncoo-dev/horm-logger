@@ -32,6 +32,7 @@ class PruneCommand extends Command
         $this->call('model:prune', [
             '--model' => [config('horm.model.entry')],
             '--pretend' => $this->option('pretend'),
+            '----chunk' => 100_000,
         ]);
 
     }
