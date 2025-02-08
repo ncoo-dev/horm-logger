@@ -18,19 +18,17 @@ class EntryController
 
         $entriesCount = $model::query()
             ->where('created_at', '>=', $validated['start'])
-        ->count();
-        if($entriesCount == 0) {
+            ->count();
+        if ($entriesCount == 0) {
             return EntryResource::collection([]);
         }
 
-
         $comparableEntry = $model::query()
-            ->offset(min($entriesCount-1, 1000))
+            ->offset(min($entriesCount - 1, 1000))
             ->where('created_at', '>=', $validated['start'])
             ->oldest()
             ->limit(1)
-            ->first()
-        ;
+            ->first();
 
         return EntryResource::collection(Entry::query()
             ->where('created_at', '>=', $validated['start'])
