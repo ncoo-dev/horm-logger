@@ -9,7 +9,7 @@ class Response
     public function __construct(
         public array $headers,
         public int $status,
-        public ?string $times,
+        public ?float $times,
     ) {}
 
     public static function fromHttpClientResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response): self
@@ -21,7 +21,7 @@ class Response
         );
     }
 
-    public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?int $times = null): self
+    public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?float $times = null): self
     {
         return new self(
             headers: $response->headers->all(),
