@@ -9,7 +9,7 @@ use NcooDev\HormLogger\HormLoggerServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 // Create a minimal User model for testing if it doesn't exist
-if (!class_exists('User')) {
+if (! class_exists('User')) {
     class User extends \Illuminate\Foundation\Auth\User
     {
         protected $fillable = ['name', 'email', 'password'];
@@ -23,15 +23,15 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Setup factories
         Factory::guessFactoryNamesUsing(
             fn (string $modelName) => 'NcooDev\\HormLogger\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
-        
+
         // Setup database after parent setup to ensure proper configuration
         $this->setUpDatabase();
-        
+
         // Ensure routes are registered at the beginning
         $this->refreshServiceProvider();
     }
@@ -77,11 +77,11 @@ abstract class TestCase extends OrchestraTestCase
     {
         $tableName = config('horm.database.table_name', 'horm_entries');
         $connection = config('horm.database.connection') ?: config('database.default');
-        
+
         // Check if table already exists to avoid "table already exists" error
-        if (!\Illuminate\Support\Facades\Schema::connection($connection)->hasTable($tableName)) {
+        if (! \Illuminate\Support\Facades\Schema::connection($connection)->hasTable($tableName)) {
             // Check if class is already declared to avoid "class already in use" error
-            if (!class_exists('CreateHormEntriesTable')) {
+            if (! class_exists('CreateHormEntriesTable')) {
                 require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
             }
 
@@ -93,7 +93,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         // Ensure the service provider is properly registered and booted
         $this->app->register(HormLoggerServiceProvider::class);
-        
+
         // Force boot the provider
         $provider = $this->app->getProvider(HormLoggerServiceProvider::class);
         if ($provider) {

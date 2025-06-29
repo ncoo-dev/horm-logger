@@ -35,7 +35,7 @@ describe('HORM Logger Enums', function () {
         });
 
         it('throws exception for invalid values', function () {
-            expect(fn() => Direction::from('invalid'))
+            expect(fn () => Direction::from('invalid'))
                 ->toThrow(ValueError::class);
         });
 
@@ -77,8 +77,8 @@ describe('HORM Logger Enums', function () {
             $cases = EntryType::cases();
 
             expect($cases)->toHaveCount(3);
-            
-            $values = array_map(fn($case) => $case->value, $cases);
+
+            $values = array_map(fn ($case) => $case->value, $cases);
             expect($values)->toContain('response')
                 ->toContain('request_failed')
                 ->toContain('connection_failed');
@@ -101,8 +101,8 @@ describe('HORM Logger Enums', function () {
         });
 
         it('can be used in conditional logic', function () {
-            $isSuccess = fn(EntryType $type) => $type === EntryType::RESPONSE;
-            $isError = fn(EntryType $type) => in_array($type, [EntryType::REQUEST_FAILED, EntryType::CONNECTION_FAILED]);
+            $isSuccess = fn (EntryType $type) => $type === EntryType::RESPONSE;
+            $isError = fn (EntryType $type) => in_array($type, [EntryType::REQUEST_FAILED, EntryType::CONNECTION_FAILED]);
 
             expect($isSuccess(EntryType::RESPONSE))->toBeTrue()
                 ->and($isSuccess(EntryType::REQUEST_FAILED))->toBeFalse()
@@ -175,8 +175,8 @@ describe('HORM Logger Enums', function () {
         });
 
         it('can be used in conditional logic', function () {
-            $isReadOperation = fn(Method $method) => in_array($method, [Method::GET, Method::HEAD, Method::OPTIONS]);
-            $isWriteOperation = fn(Method $method) => in_array($method, [Method::POST, Method::PUT, Method::PATCH, Method::DELETE]);
+            $isReadOperation = fn (Method $method) => in_array($method, [Method::GET, Method::HEAD, Method::OPTIONS]);
+            $isWriteOperation = fn (Method $method) => in_array($method, [Method::POST, Method::PUT, Method::PATCH, Method::DELETE]);
 
             expect($isReadOperation(Method::GET))->toBeTrue()
                 ->and($isReadOperation(Method::POST))->toBeFalse()
@@ -215,8 +215,8 @@ describe('HORM Logger Enums', function () {
                 ['direction' => Direction::INCOMING, 'type' => EntryType::REQUEST_FAILED],
             ];
 
-            $outgoingEntries = array_filter($entries, fn($entry) => $entry['direction'] === Direction::OUTGOING);
-            $successfulEntries = array_filter($entries, fn($entry) => $entry['type'] === EntryType::RESPONSE);
+            $outgoingEntries = array_filter($entries, fn ($entry) => $entry['direction'] === Direction::OUTGOING);
+            $successfulEntries = array_filter($entries, fn ($entry) => $entry['type'] === EntryType::RESPONSE);
 
             expect(count($outgoingEntries))->toBe(2)
                 ->and(count($successfulEntries))->toBe(2);
@@ -254,7 +254,7 @@ describe('HORM Logger Enums', function () {
         it('can be queried using enum values', function () {
             // Clear any existing entries first
             \NcooDev\HormLogger\Models\Entry::query()->delete();
-            
+
             \NcooDev\HormLogger\Models\Entry::factory()->create(['direction' => Direction::INCOMING]);
             \NcooDev\HormLogger\Models\Entry::factory()->create(['direction' => Direction::OUTGOING]);
             \NcooDev\HormLogger\Models\Entry::factory()->create(['type' => EntryType::RESPONSE]);

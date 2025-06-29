@@ -4,7 +4,6 @@ namespace NcooDev\HormLogger\Http\Controllers;
 
 use Illuminate\Http\Request;
 use NcooDev\HormLogger\Http\Ressources\EntryResource;
-use NcooDev\HormLogger\Models\Entry;
 
 class EntryController
 {
@@ -25,7 +24,7 @@ class EntryController
 
         $maxEntries = 1000;
         $limitCount = min($entriesCount, $maxEntries);
-        
+
         return EntryResource::collection($model::query()
             ->where('created_at', '>=', $validated['start'])
             ->oldest()

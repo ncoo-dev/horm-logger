@@ -1,8 +1,5 @@
 <?php
 
-use Illuminate\Http\Client\Response as HttpClientResponse;
-use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Http;
 use NcooDev\HormLogger\Dtos\Request as RequestDto;
 use NcooDev\HormLogger\Dtos\Response as ResponseDto;
@@ -39,7 +36,7 @@ describe('HORM Logger DTOs', function () {
         it('creates Request DTO from Laravel HTTP request', function () {
             $httpRequest = createRequest('GET', '/api/test', [
                 'HTTP_AUTHORIZATION' => 'Bearer token',
-                'HTTP_CONTENT_TYPE' => 'application/json'
+                'HTTP_CONTENT_TYPE' => 'application/json',
             ], ['param' => 'value']);
 
             $requestDto = RequestDto::fromHttpRequest($httpRequest);
@@ -101,8 +98,8 @@ describe('HORM Logger DTOs', function () {
                 ->and($responseDto->status)->toBe(200)
                 ->and($responseDto->headers)->toBeArray()
                 ->and($responseDto->times)->when(
-                    !is_null($responseDto->times),
-                    fn($expectation) => $expectation->toBeFloat()
+                    ! is_null($responseDto->times),
+                    fn ($expectation) => $expectation->toBeFloat()
                 );
         });
 
