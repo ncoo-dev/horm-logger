@@ -16,11 +16,15 @@ use function Pest\Laravel\post;
 describe('HORM Logger Event Listeners', function () {
 
     beforeEach(function () {
+        // Clear any previous fakes to ensure clean state
+        Http::fake();
+
         Http::fake([
-            'https://success.test*' => Http::response('success response', 200, ['Content-Type' => 'application/json']),
-            'https://client-error.test*' => Http::response('client error', 400, ['Content-Type' => 'text/plain']),
-            'https://server-error.test*' => Http::response('server error', 500, ['Content-Type' => 'text/html']),
-            'https://connection-failed.test*' => Http::failedConnection('Connection timeout'),
+            'http://success.example.com*' => Http::response('success response', 200, ['Content-Type' => 'application/json']),
+            'http://client-error.example.com*' => Http::response('client error', 400, ['Content-Type' => 'text/plain']),
+            'http://server-error.example.com*' => Http::response('server error', 500, ['Content-Type' => 'text/html']),
+            'http://connection-failed.example.com*' => Http::failedConnection('Connection timeout'),
+            'http://timeout.example.com*' => Http::failedConnection('Request timeout after 30 seconds'),
         ]);
     });
 
@@ -28,7 +32,7 @@ describe('HORM Logger Event Listeners', function () {
         it('logs successful HTTP responses correctly', function () {
             expect(Entry::all())->toBeEmpty();
 
-            Http::get('https://success.test/api/data');
+            Http::get('http://success.test/api/data');
 
             expect(Entry::all())->toHaveCount(1);
 
@@ -48,7 +52,7 @@ describe('HORM Logger Event Listeners', function () {
         it('logs client error responses as REQUEST_FAILED', function () {
             expect(Entry::all())->toBeEmpty();
 
-            Http::post('https://client-error.test/api/submit', ['data' => 'test']);
+            Http::post('http://client-error.test/api/submit', ['data' => 'test']);
 
             expect(Entry::all())->toHaveCount(1);
 
@@ -66,7 +70,7 @@ describe('HORM Logger Event Listeners', function () {
         it('logs server error responses as REQUEST_FAILED', function () {
             expect(Entry::all())->toBeEmpty();
 
-            Http::get('https://server-error.test/api/broken');
+            Http::get('http://server-error.test/api/broken');
 
             expect(Entry::all())->toHaveCount(1);
 
@@ -81,7 +85,7 @@ describe('HORM Logger Event Listeners', function () {
         it('stores request and response DTOs correctly', function () {
             $this->markTestSkipped('SSL certificate issue with fake HTTP requests');
             Http::withHeaders(['Authorization' => 'Bearer test-token'])
-                ->post('https://success.test/api/endpoint', ['payload' => 'data']);
+                ->post('http://success.test/api/endpoint', ['payload' => 'data']);
 
             $entry = Entry::first();
             $requestDto = Request::fromDB($entry->request);
@@ -109,7 +113,7 @@ describe('HORM Logger Event Listeners', function () {
             expect(Entry::all())->toBeEmpty();
 
             try {
-                Http::get('https://connection-failed.test/api');
+                Http::get('http://connection-failed.test/api');
             } catch (ConnectionException $e) {
                 // Expected exception
             }
@@ -150,11 +154,11 @@ describe('HORM Logger Event Listeners', function () {
     describe('Multiple HTTP Methods', function () {
         it('logs different HTTP methods correctly', function () {
             $methods = [
-                ['method' => 'GET', 'url' => 'https://success.test/get'],
-                ['method' => 'POST', 'url' => 'https://success.test/post'],
-                ['method' => 'PUT', 'url' => 'https://success.test/put'],
-                ['method' => 'PATCH', 'url' => 'https://success.test/patch'],
-                ['method' => 'DELETE', 'url' => 'https://success.test/delete'],
+                ['method' => 'GET', 'url' => 'http://success.test/get'],
+                ['method' => 'POST', 'url' => 'http://success.test/post'],
+                ['method' => 'PUT', 'url' => 'http://success.test/put'],
+                ['method' => 'PATCH', 'url' => 'http://success.test/patch'],
+                ['method' => 'DELETE', 'url' => 'http://success.test/delete'],
             ];
 
             foreach ($methods as $testCase) {

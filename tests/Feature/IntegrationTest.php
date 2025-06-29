@@ -16,16 +16,16 @@ describe('HORM Logger Full Integration', function () {
         it('automatically logs complete HTTP client interactions', function () {
             // Setup HTTP fakes for different scenarios
             Http::fake([
-                'https://api.success.test/*' => Http::response(['status' => 'success'], 200, ['Content-Type' => 'application/json']),
-                'https://api.error.test/*' => Http::response(['error' => 'Not found'], 404, ['Content-Type' => 'application/json']),
-                'https://api.timeout.test/*' => Http::failedConnection('Connection timeout'),
+                'http://api.success.example.com/*' => Http::response(['status' => 'success'], 200, ['Content-Type' => 'application/json']),
+                'http://api.error.example.com/*' => Http::response(['error' => 'Not found'], 404, ['Content-Type' => 'application/json']),
+                'http://api.timeout.example.com/*' => Http::failedConnection('Connection timeout'),
             ]);
 
             expect(Entry::count())->toBe(0);
 
             // Test successful request
             $response1 = Http::withHeaders(['X-Custom-Header' => 'test'])
-                ->post('https://api.success.test/users', ['name' => 'John Doe']);
+                ->post('http://api.success.example.com/users', ['name' => 'John Doe']);
 
             expect($response1->successful())->toBeTrue()
                 ->and(Entry::count())->toBe(1);
@@ -33,12 +33,12 @@ describe('HORM Logger Full Integration', function () {
             $entry1 = Entry::latest()->first();
             expect($entry1->type)->toBe(EntryType::RESPONSE)
                 ->and($entry1->direction)->toBe(Direction::OUTGOING)
-                ->and($entry1->url)->toBe('https://api.success.test/users')
+                ->and($entry1->url)->toBe('http://api.success.example.com/users')
                 ->and($entry1->status_code)->toBe(200)
                 ->and($entry1->method->value)->toBe('POST');
 
             // Test error request
-            $response2 = Http::get('https://api.error.test/nonexistent');
+            $response2 = Http::get('http://api.error.example.com/nonexistent');
 
             expect($response2->failed())->toBeTrue()
                 ->and(Entry::count())->toBe(2);
@@ -49,7 +49,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Test connection failure
             try {
-                Http::get('https://api.timeout.test/slow');
+                Http::get('http://api.timeout.example.com/slow');
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
                 // Expected exception
             }
@@ -63,7 +63,7 @@ describe('HORM Logger Full Integration', function () {
 
         it('preserves complete request and response data', function () {
             Http::fake([
-                'https://api.test.com/*' => Http::response(
+                'http://api.example.com/*' => Http::response(
                     json_encode(['result' => 'processed', 'id' => 123]),
                     201,
                     ['Location' => '/api/resources/123', 'X-Rate-Limit' => '100']
@@ -72,14 +72,14 @@ describe('HORM Logger Full Integration', function () {
 
             $requestData = ['name' => 'Test User', 'email' => 'test@example.com'];
             Http::withHeaders(['Authorization' => 'Bearer secret-token'])
-                ->post('https://api.test.com/resources', $requestData);
+                ->post('http://api.example.com/resources', $requestData);
 
             $entry = Entry::latest()->first();
 
             // Verify request data preservation
             $requestDto = \NcooDev\HormLogger\Dtos\Request::fromDB($entry->request);
             expect($requestDto->method)->toBe('POST')
-                ->and($requestDto->url)->toBe('https://api.test.com/resources')
+                ->and($requestDto->url)->toBe('http://api.example.com/resources')
                 ->and($requestDto->headers)->toHaveKey('Authorization')
                 ->and($requestDto->body)->toContain('Test User');
 
@@ -295,13 +295,13 @@ describe('HORM Logger Full Integration', function () {
     describe('Error Handling and Edge Cases', function () {
         it('handles concurrent HTTP requests gracefully', function () {
             Http::fake([
-                'https://concurrent.test/*' => Http::response('OK', 200),
+                'http://concurrent.example.com/*' => Http::response('OK', 200),
             ]);
 
             // Simulate concurrent requests
             $promises = [];
             for ($i = 0; $i < 10; $i++) {
-                $promises[] = Http::async()->get("https://concurrent.test/endpoint-{$i}");
+                $promises[] = Http::async()->get("http://concurrent.example.com/endpoint-{$i}");
             }
 
             // Wait for all requests to complete
@@ -315,7 +315,7 @@ describe('HORM Logger Full Integration', function () {
             // Verify no data corruption occurred
             $entries = Entry::all();
             foreach ($entries as $entry) {
-                expect($entry->url)->toContain('concurrent.test')
+                expect($entry->url)->toContain('concurrent.example.com')
                     ->and($entry->type)->toBe(EntryType::RESPONSE)
                     ->and($entry->direction)->toBe(Direction::OUTGOING);
             }
@@ -325,10 +325,10 @@ describe('HORM Logger Full Integration', function () {
             $largePayload = str_repeat('x', 10000); // 10KB payload
 
             Http::fake([
-                'https://large.test/*' => Http::response($largePayload, 200),
+                'http://large.example.com/*' => Http::response($largePayload, 200),
             ]);
 
-            Http::post('https://large.test/upload', ['data' => $largePayload]);
+            Http::post('http://large.example.com/upload', ['data' => $largePayload]);
 
             $entry = Entry::latest()->first();
             expect($entry)->not->toBeNull()
@@ -342,11 +342,11 @@ describe('HORM Logger Full Integration', function () {
         it('maintains data integrity under stress conditions', function () {
             // Create many entries rapidly
             Http::fake([
-                'https://stress.test/*' => Http::response('OK', 200),
+                'http://stress.example.com/*' => Http::response('OK', 200),
             ]);
 
             for ($i = 0; $i < 100; $i++) {
-                Http::get("https://stress.test/endpoint-{$i}");
+                Http::get("http://stress.example.com/endpoint-{$i}");
             }
 
             expect(Entry::count())->toBe(100);
@@ -361,7 +361,7 @@ describe('HORM Logger Full Integration', function () {
                 expect($entry->id)->not->toBeNull()
                     ->and($entry->direction)->toBe(Direction::OUTGOING)
                     ->and($entry->type)->toBe(EntryType::RESPONSE)
-                    ->and($entry->url)->toContain('stress.test')
+                    ->and($entry->url)->toContain('stress.example.com')
                     ->and($entry->method)->not->toBeNull()
                     ->and($entry->status_code)->toBe(200)
                     ->and($entry->created_at)->not->toBeNull();
@@ -372,15 +372,15 @@ describe('HORM Logger Full Integration', function () {
     describe('Real-world Usage Scenarios', function () {
         it('simulates typical API integration monitoring', function () {
             Http::fake([
-                'https://api.stripe.com/*' => Http::response(['id' => 'ch_123'], 200),
-                'https://api.sendgrid.com/*' => Http::response(['message' => 'queued'], 202),
-                'https://api.github.com/*' => Http::response(['name' => 'repo'], 200),
+                'http://api.stripe.example.com/*' => Http::response(['id' => 'ch_123'], 200),
+                'http://api.sendgrid.example.com/*' => Http::response(['message' => 'queued'], 202),
+                'http://api.github.example.com/*' => Http::response(['name' => 'repo'], 200),
             ]);
 
             // Simulate a typical application flow
             // 1. Process payment
             Http::withHeaders(['Authorization' => 'Bearer sk_test_...'])
-                ->post('https://api.stripe.com/v1/charges', [
+                ->post('http://api.stripe.example.com/v1/charges', [
                     'amount' => 2000,
                     'currency' => 'usd',
                     'source' => 'tok_visa',
@@ -388,14 +388,14 @@ describe('HORM Logger Full Integration', function () {
 
             // 2. Send notification email
             Http::withHeaders(['Authorization' => 'Bearer SG.abc123'])
-                ->post('https://api.sendgrid.com/v3/mail/send', [
+                ->post('http://api.sendgrid.example.com/v3/mail/send', [
                     'personalizations' => [['to' => [['email' => 'user@example.com']]]],
                     'subject' => 'Payment processed',
                 ]);
 
             // 3. Create repository webhook
             Http::withHeaders(['Authorization' => 'token ghp_123'])
-                ->post('https://api.github.com/repos/user/repo/hooks', [
+                ->post('http://api.github.example.com/repos/user/repo/hooks', [
                     'name' => 'web',
                     'config' => ['url' => 'https://app.com/webhook'],
                 ]);
@@ -406,9 +406,9 @@ describe('HORM Logger Full Integration', function () {
             $entries = Entry::all();
             $hosts = $entries->pluck('url')->map(fn($url) => parse_url($url, PHP_URL_HOST));
 
-            expect($hosts)->toContain('api.stripe.com')
-                ->toContain('api.sendgrid.com')
-                ->toContain('api.github.com');
+            expect($hosts)->toContain('api.stripe.example.com')
+                ->toContain('api.sendgrid.example.com')
+                ->toContain('api.github.example.com');
 
             // Verify sensitive data is captured (for debugging purposes)
             $stripeEntry = $entries->firstWhere('url', 'like', '%stripe%');
@@ -418,22 +418,22 @@ describe('HORM Logger Full Integration', function () {
 
         it('handles mixed success and failure scenarios', function () {
             Http::fake([
-                'https://reliable.service.com/*' => Http::response('OK', 200),
-                'https://flaky.service.com/*' => Http::sequence()
+                'http://reliable.service.example.com/*' => Http::response('OK', 200),
+                'http://flaky.service.example.com/*' => Http::sequence()
                     ->push('Success', 200)
                     ->push('Rate limited', 429)
                     ->push('Server error', 500)
                     ->pushStatus(503),
-                'https://down.service.com/*' => Http::failedConnection('Service unavailable'),
+                'http://down.service.example.com/*' => Http::failedConnection('Service unavailable'),
             ]);
 
             // Call reliable service
-            Http::get('https://reliable.service.com/health');
+            Http::get('http://reliable.service.example.com/health');
 
             // Call flaky service multiple times
             for ($i = 0; $i < 4; $i++) {
                 try {
-                    Http::get('https://flaky.service.com/data');
+                    Http::get('http://flaky.service.example.com/data');
                 } catch (\Exception $e) {
                     // Some calls may fail
                 }
@@ -441,7 +441,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Try to call down service
             try {
-                Http::get('https://down.service.com/status');
+                Http::get('http://down.service.example.com/status');
             } catch (\Exception $e) {
                 // Expected to fail
             }
