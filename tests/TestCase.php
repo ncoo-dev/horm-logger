@@ -55,6 +55,7 @@ abstract class TestCase extends OrchestraTestCase
         ]);
 
         // Set default HORM configuration for testing
+        config()->set('horm.database.table_name', 'horm_entries');
         config()->set('horm.model.entry', \NcooDev\HormLogger\Models\Entry::class);
         config()->set('horm.model.keep_history_for_days', 2);
         config()->set('horm.endpoint.enabled', true);

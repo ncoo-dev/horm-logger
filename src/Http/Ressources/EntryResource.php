@@ -11,10 +11,10 @@ class EntryResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'direction' => $this->direction,
+            'direction' => $this->direction->value,
             'url' => $this->url,
-            'type' => $this->type,
-            'method' => $this->method,
+            'type' => $this->type->value,
+            'method' => $this->method->value,
             'request' => $this->request,
             'response' => $this->response,
             'content' => $this->content,
