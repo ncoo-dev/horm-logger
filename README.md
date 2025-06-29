@@ -1,88 +1,259 @@
-# Awesome package that allow to log HTTP Outbound Request for HORM
+# HORM Logger - Package de Monitoring HTTP pour Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ncoo-dev/horm-logger.svg?style=flat-square)](https://packagist.org/packages/ncoo-dev/horm-logger)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ncoo-dev/horm-logger/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/ncoo-dev/horm-logger/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/ncoo-dev/horm-logger.svg?style=flat-square)](https://packagist.org/packages/ncoo-dev/horm-logger)
 
-This is where your description should go. Try and limit it to a paragraph or two. Consider adding a small example.
+**HORM Logger** est un package Laravel conçu pour capturer précisément toutes les requêtes HTTP entrantes et sortantes de vos applications. Il s'intègre parfaitement avec la plateforme HORM pour un monitoring complet de vos communications HTTP.
 
-## Support us
+## 🎯 Fonctionnalités
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/horm-logger.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/horm-logger)
+### Capture Automatique des Requêtes HTTP
+- **✅ Requêtes Sortantes** : Capture automatique de toutes les requêtes via `Http::` facade
+- **✅ Requêtes Entrantes** : Monitoring via middleware des requêtes reçues
+- **✅ Gestion des Échecs** : Logging des tentatives de connexion échouées
+- **✅ Données Complètes** : Headers, payload, temps de réponse, codes de statut
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
+### Données Capturées
+- 🌐 **URL et méthodes HTTP** (GET, POST, PUT, PATCH, DELETE)
+- 📊 **Codes de statut HTTP** avec classification automatique
+- ⏱️ **Temps de réponse** et métriques de performance
+- 📦 **Headers complets** (requête et réponse)
+- 💾 **Contenu intégral** des requêtes et réponses
+- 🕒 **Timestamps précis** pour chaque transaction
+- 🔄 **Direction** : distinction entrante/sortante
 
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+## 🚀 Installation
 
-## Installation
-
-You can install the package via composer:
+### 1. Installation via Composer
 
 ```bash
 composer require ncoo-dev/horm-logger
 ```
 
-## Prunning
-You should schedule the horm:prune Artisan command in your application's App\Console\Kernel class. 
-You are free to choose the appropriate interval at which this command should be run:
-
-```php
-/**
-* Define the application's command schedule.
-*
-* @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-* @return void
-  */
-  protected function schedule(Schedule $schedule)
-  {
-      $schedule->command('horm:prune')->daily();
-  }
-```
-
-Behind the scenes, the horm:prune command will use your configuration to know what logs to prune. 
-By default, it will keep all logs for 2 days. 
-You can change this behavior by publishing the configuration file:
+### 2. Publication des Assets (Optionnel)
 
 ```bash
+# Publier la configuration
+php artisan vendor:publish --provider="NcooDev\HormLogger\HormLoggerServiceProvider" --tag=horm-logger-config
+
+# Publier les migrations
+php artisan vendor:publish --provider="NcooDev\HormLogger\HormLoggerServiceProvider" --tag=horm-logger-migrations
+
+# Ou utiliser la commande d'installation complète
+php artisan horm:install
+```
+
+### 3. Migration de la Base de Données
+
+```bash
+php artisan migrate
+```
+
+## ⚙️ Configuration
+
+### Configuration de Base
+
+Le package fonctionne directement après installation. Les requêtes HTTP sortantes sont automatiquement capturées.
+
+### Configuration Avancée
+
+Créez le fichier `config/horm.php` pour personnaliser le comportement :
 
 ```php
 return [
-    ...
-    'model' => [
-        'keep_history_for_days' => 2,
+    // Configuration de la base de données
+    'database' => [
+        'connection' => env('HORM_DB_CONNECTION', null),
+        'table_name' => 'horm_entries',
     ],
-    ...
+    
+    // Configuration du modèle
+    'model' => [
+        'entry' => \NcooDev\HormLogger\Models\Entry::class,
+        'keep_history_for_days' => 2, // Rétention des logs
+    ],
+    
+    // Configuration de l'endpoint d'export
+    'endpoint' => [
+        'enabled' => env('HORM_ENDPOINT_ENABLED', true),
+        'secret' => env('HORM_ENDPOINT_SECRET', 'my-little-secret-with-horm'),
+        'url' => env('HORM_ENDPOINT_URL', 'horm-logger-get-entries'),
+    ],
 ];
 ```
-## Configuration
 
-```bash
-php artisan vendor:publish --provider="NcooDev\HormLogger\HormLoggerServiceProvider" --tag=horm-logger-config
+### Variables d'Environnement
+
+Ajoutez à votre fichier `.env` :
+
+```env
+# Configuration HORM Logger
+HORM_DB_CONNECTION=mysql
+HORM_ENDPOINT_ENABLED=true
+HORM_ENDPOINT_SECRET=votre-secret-securise
+HORM_ENDPOINT_URL=horm-logger-get-entries
 ```
 
-## Testing
+## 🔧 Utilisation
+
+### Capture Automatique (Requêtes Sortantes)
+
+Les requêtes HTTP sortantes sont automatiquement capturées :
+
+```php
+// Ces requêtes seront automatiquement loggées
+Http::get('https://api.example.com/users');
+Http::post('https://api.example.com/orders', ['data' => 'value']);
+Http::withHeaders(['Authorization' => 'Bearer token'])->get('https://api.example.com/secure');
+```
+
+### Capture Manuelle (Requêtes Entrantes)
+
+Pour capturer les requêtes entrantes, ajoutez le middleware aux routes :
+
+```php
+// Dans vos routes (web.php ou api.php)
+Route::middleware(['horm.save-log'])->group(function () {
+    Route::get('/api/users', [UserController::class, 'index']);
+    Route::post('/api/orders', [OrderController::class, 'store']);
+});
+
+// Ou sur une route spécifique
+Route::get('/api/monitored-endpoint', [Controller::class, 'method'])
+    ->middleware('horm.save-log');
+```
+
+### Classification Automatique
+
+Le package classe automatiquement les requêtes :
+
+- **✅ RESPONSE** : Requêtes réussies (status < 400)
+- **❌ REQUEST_FAILED** : Erreurs HTTP (status >= 400)  
+- **🔌 CONNECTION_FAILED** : Échecs de connexion réseau
+
+## 🗂️ Gestion des Données
+
+### Nettoyage Automatique
+
+Configurez le nettoyage automatique des logs dans `app/Console/Kernel.php` :
+
+```php
+protected function schedule(Schedule $schedule)
+{
+    // Nettoie les logs de plus de 2 jours (configurable)
+    $schedule->command('horm:prune')->daily();
+}
+```
+
+### Rétention Personnalisée
+
+Modifiez la durée de rétention dans la configuration :
+
+```php
+'model' => [
+    'keep_history_for_days' => 7, // Garder 7 jours
+],
+```
+
+## 🔗 Intégration avec HORM
+
+### Endpoint d'Export
+
+Le package expose automatiquement un endpoint sécurisé pour l'export des données vers la plateforme HORM :
+
+```
+GET /horm-logger-get-entries?from=2024-01-01&to=2024-01-31
+Headers: horm-check-secret: votre-secret-securise
+```
+
+### Sécurité de l'API
+
+- **Authentification** : Header `horm-check-secret` requis
+- **Limitation** : Maximum 1000 entrées par requête
+- **Filtrage** : Par plage de dates via paramètres `from` et `to`
+
+## 📊 Structure des Données
+
+### Table `horm_entries`
+
+```sql
+CREATE TABLE horm_entries (
+    id VARCHAR(36) PRIMARY KEY,
+    direction ENUM('incoming', 'outgoing'),
+    url TEXT,
+    type ENUM('response', 'connection_failed', 'request_failed'),
+    method VARCHAR(10),
+    request TEXT,      -- Données de requête (base64)
+    response TEXT,     -- Données de réponse (base64)
+    status_code INT,
+    content TEXT,      -- Contenu de réponse (base64)
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### Format des Données Exportées
+
+```json
+{
+    "data": [
+        {
+            "id": "uuid",
+            "direction": "outgoing",
+            "url": "https://api.example.com/users",
+            "type": "response",
+            "method": "GET",
+            "status_code": 200,
+            "request": "eyJoZWFkZXJzIjp7fSwibWV0aG9kIjoiR0VUIn0=",
+            "response": "eyJoZWFkZXJzIjp7fSwiYm9keSI6IntcInVzZXJzXCI6W119In0=",
+            "content": "eyJ1c2VycyI6W119",
+            "created_at": "2024-01-01T10:00:00Z"
+        }
+    ]
+}
+```
+
+## ⚠️ Considérations Importantes
+
+### Sécurité
+- **Données Sensibles** : Le package capture et stocke l'intégralité des requêtes/réponses
+- **Headers d'Authentification** : Peuvent contenir des tokens d'accès
+- **Recommandation** : Utilisez une base de données dédiée avec chiffrement
+
+### Performance
+- **Impact Minimal** : Event listeners non-bloquants pour les requêtes sortantes
+- **Middleware** : Léger impact sur les requêtes entrantes
+- **Stockage** : Prévoyez l'espace disque nécessaire (données base64)
+
+### Conformité
+- **RGPD** : Attention aux données personnelles capturées
+- **Rétention** : Configurez la durée de conservation appropriée
+- **Audit** : Logs disponibles pour audit de sécurité
+
+## 🧪 Tests
 
 ```bash
 composer test
 ```
 
-## Changelog
+## 📋 Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+Consultez [CHANGELOG](CHANGELOG.md) pour voir les dernières modifications.
 
-## Contributing
+## 🤝 Contribution
 
-Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) for details.
+Pour contribuer au projet, consultez le guide de [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md).
 
-## Security Vulnerabilities
+## 🔒 Vulnérabilités de Sécurité
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Consultez notre [politique de sécurité](../../security/policy) pour signaler des vulnérabilités.
 
-## Credits
+## 👥 Crédits
 
 - [Dominique Thomas](https://github.com/ncoo-dev)
-- [All Contributors](../../contributors)
+- [Tous les contributeurs](../../contributors)
 
-## License
+## 📄 License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+MIT License - voir le fichier [LICENSE](LICENSE.md) pour plus d'informations.
