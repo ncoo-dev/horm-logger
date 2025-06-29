@@ -150,6 +150,11 @@ describe('HORM Logger Service Provider', function () {
             $migrationNames = array_map('basename', $migrationFiles);
             $hasCreateTable = collect($migrationNames)->some(fn ($name) => str_contains($name, 'create_horm_entries_table'));
             expect($hasCreateTable)->toBeTrue();
+            
+            // Verify the migration uses modern anonymous class syntax
+            $migrationFile = $migrationPath . '/create_horm_entries_table.php.stub';
+            $migrationContent = file_get_contents($migrationFile);
+            expect($migrationContent)->toContain('return new class extends Migration');
         });
     });
 

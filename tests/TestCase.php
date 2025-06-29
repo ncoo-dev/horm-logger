@@ -80,12 +80,9 @@ abstract class TestCase extends OrchestraTestCase
 
         // Check if table already exists to avoid "table already exists" error
         if (! \Illuminate\Support\Facades\Schema::connection($connection)->hasTable($tableName)) {
-            // Check if class is already declared to avoid "class already in use" error
-            if (! class_exists('CreateHormEntriesTable')) {
-                require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
-            }
-
-            (new \CreateHormEntriesTable)->up();
+            // Load and execute the migration using the anonymous class
+            $migration = require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
+            $migration->up();
         }
     }
 
