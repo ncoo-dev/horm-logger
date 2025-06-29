@@ -17,14 +17,14 @@ describe('HORM Logger Service Provider', function () {
 
         it('publishes configuration files', function () {
             $provider = new HormLoggerServiceProvider(app());
-            
+
             // Test that publishes method exists and can be called
             expect(method_exists($provider, 'publishes'))->toBeTrue();
         });
 
         it('publishes migration files', function () {
             $publishGroups = \Illuminate\Support\ServiceProvider::$publishGroups;
-            
+
             expect($publishGroups)->toHaveKey('horm-logger-migrations');
         });
 
@@ -39,7 +39,7 @@ describe('HORM Logger Service Provider', function () {
     describe('Event Listener Registration', function () {
         it('registers HTTP response listener', function () {
             $listeners = Event::getRawListeners();
-            
+
             expect($listeners)->toHaveKey('Illuminate\Http\Client\Events\ResponseReceived')
                 ->and($listeners['Illuminate\Http\Client\Events\ResponseReceived'])
                 ->toContain(HormLogResponse::class);
@@ -47,7 +47,7 @@ describe('HORM Logger Service Provider', function () {
 
         it('registers connection failed listener', function () {
             $listeners = Event::getRawListeners();
-            
+
             expect($listeners)->toHaveKey('Illuminate\Http\Client\Events\ConnectionFailed')
                 ->and($listeners['Illuminate\Http\Client\Events\ConnectionFailed'])
                 ->toContain(HormLogConnectionFailed::class);
@@ -132,30 +132,30 @@ describe('HORM Logger Service Provider', function () {
             config()->set('horm', null);
 
             // Should not throw exception when accessing config
-            expect(fn() => config('horm.endpoint.enabled', false))->not->toThrow(Exception::class);
+            expect(fn () => config('horm.endpoint.enabled', false))->not->toThrow(Exception::class);
         });
     });
 
     describe('Database Migration Registration', function () {
         it('provides package migrations', function () {
             // Check that the package migration files exist
-            $migrationPath = __DIR__ . '/../../database/migrations';
+            $migrationPath = __DIR__.'/../../database/migrations';
             expect(is_dir($migrationPath))->toBeTrue();
-            
+
             // Check that specific migration files exist
-            $migrationFiles = glob($migrationPath . '/*.php*');
+            $migrationFiles = glob($migrationPath.'/*.php*');
             expect(count($migrationFiles))->toBeGreaterThan(0);
-            
+
             // Verify migration files have expected names
             $migrationNames = array_map('basename', $migrationFiles);
-            $hasCreateTable = collect($migrationNames)->some(fn($name) => str_contains($name, 'create_horm_entries_table'));
+            $hasCreateTable = collect($migrationNames)->some(fn ($name) => str_contains($name, 'create_horm_entries_table'));
             expect($hasCreateTable)->toBeTrue();
         });
     });
 
     describe('Package Discovery', function () {
         it('is discoverable via composer extra config', function () {
-            $composerFile = file_get_contents(__DIR__ . '/../../composer.json');
+            $composerFile = file_get_contents(__DIR__.'/../../composer.json');
             $composer = json_decode($composerFile, true);
 
             expect($composer['extra']['laravel']['providers'])
@@ -163,7 +163,7 @@ describe('HORM Logger Service Provider', function () {
         });
 
         it('registers facade alias', function () {
-            $composerFile = file_get_contents(__DIR__ . '/../../composer.json');
+            $composerFile = file_get_contents(__DIR__.'/../../composer.json');
             $composer = json_decode($composerFile, true);
 
             expect($composer['extra']['aliases'])
@@ -177,13 +177,13 @@ describe('HORM Logger Service Provider', function () {
         it('boots without errors', function () {
             $provider = new HormLoggerServiceProvider(app());
 
-            expect(fn() => $provider->boot())->not->toThrow(Exception::class);
+            expect(fn () => $provider->boot())->not->toThrow(Exception::class);
         });
 
         it('registers services without errors', function () {
             $provider = new HormLoggerServiceProvider(app());
 
-            expect(fn() => $provider->register())->not->toThrow(Exception::class);
+            expect(fn () => $provider->register())->not->toThrow(Exception::class);
         });
     });
 

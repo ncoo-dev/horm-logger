@@ -225,7 +225,7 @@ describe('Entry Model', function () {
 
     describe('Validation and Data Integrity', function () {
         it('handles long URLs correctly', function () {
-            $longUrl = 'https://example.com/' . str_repeat('very-long-path-segment/', 100);
+            $longUrl = 'https://example.com/'.str_repeat('very-long-path-segment/', 100);
 
             $entry = Entry::factory()->create(['url' => $longUrl]);
 

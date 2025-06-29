@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use NcooDev\HormLogger\Dtos\Request;
@@ -18,7 +16,7 @@ describe('HORM Logger Event Listeners', function () {
     beforeEach(function () {
         // Prevent any real HTTP requests
         Http::preventStrayRequests();
-        
+
         Http::fake([
             'http://success.example.com*' => Http::response('success response', 200, ['Content-Type' => 'application/json']),
             'http://client-error.example.com*' => Http::response('client error', 400, ['Content-Type' => 'text/plain']),
@@ -75,7 +73,7 @@ describe('HORM Logger Event Listeners', function () {
                     'method' => 'POST',
                     'url' => 'http://client-error.example.com/api/submit',
                     'headers' => ['Content-Type' => 'application/json'],
-                    'body' => json_encode(['data' => 'test'])
+                    'body' => json_encode(['data' => 'test']),
                 ])),
                 'response' => base64_encode(serialize(['status' => 400, 'headers' => [], 'times' => 0.1])),
                 'content' => base64_encode(serialize('client error')),
@@ -110,7 +108,7 @@ describe('HORM Logger Event Listeners', function () {
                     'method' => 'GET',
                     'url' => 'http://server-error.example.com/api/broken',
                     'headers' => [],
-                    'body' => ''
+                    'body' => '',
                 ])),
                 'response' => base64_encode(serialize(['status' => 500, 'headers' => [], 'times' => 0.1])),
                 'content' => base64_encode(serialize('server error')),
@@ -136,13 +134,13 @@ describe('HORM Logger Event Listeners', function () {
                 headers: ['Authorization' => 'Bearer test-token', 'Content-Type' => 'application/json'],
                 body: json_encode(['payload' => 'data'])
             );
-            
+
             $responseDto = new \NcooDev\HormLogger\Dtos\Response(
                 status: 200,
                 headers: ['Content-Type' => 'application/json'],
                 times: 0.25
             );
-            
+
             Entry::create([
                 'type' => EntryType::RESPONSE,
                 'direction' => Direction::OUTGOING,
@@ -190,7 +188,7 @@ describe('HORM Logger Event Listeners', function () {
                     'method' => 'GET',
                     'url' => 'http://connection-failed.example.com/api',
                     'headers' => [],
-                    'body' => ''
+                    'body' => '',
                 ])),
                 'response' => null,
                 'content' => base64_encode(serialize('Connection timeout')),
@@ -214,7 +212,7 @@ describe('HORM Logger Event Listeners', function () {
         });
 
         it('handles connection timeouts with different error messages', function () {
-            // Create a timeout entry manually  
+            // Create a timeout entry manually
             Entry::create([
                 'type' => EntryType::CONNECTION_FAILED,
                 'direction' => Direction::OUTGOING,
@@ -225,7 +223,7 @@ describe('HORM Logger Event Listeners', function () {
                     'method' => 'GET',
                     'url' => 'http://timeout.example.com/slow-endpoint',
                     'headers' => [],
-                    'body' => ''
+                    'body' => '',
                 ])),
                 'response' => null,
                 'content' => base64_encode(serialize('Request timeout after 30 seconds')),
@@ -260,7 +258,7 @@ describe('HORM Logger Event Listeners', function () {
                         'method' => $testCase['method'],
                         'url' => $testCase['url'],
                         'headers' => [],
-                        'body' => ''
+                        'body' => '',
                     ])),
                     'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
                     'content' => base64_encode(serialize('success response')),
@@ -288,7 +286,7 @@ describe('HORM Logger Middleware', function () {
             expect(Entry::all())->toBeEmpty();
 
             $request = createRequest('GET', '/api/test');
-            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog();
+            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog;
 
             $response = $middleware->handle($request, function ($req) {
                 return response('success response', 200);
@@ -311,7 +309,7 @@ describe('HORM Logger Middleware', function () {
             expect(Entry::all())->toBeEmpty();
 
             $request = createRequest('POST', '/api/error');
-            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog();
+            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog;
 
             $response = $middleware->handle($request, function ($req) {
                 return response('error occurred', 404);
@@ -330,10 +328,10 @@ describe('HORM Logger Middleware', function () {
         it('correctly stores request and response DTOs', function () {
             $request = createRequest('POST', '/api/submit', [
                 'HTTP_AUTHORIZATION' => 'Bearer token',
-                'HTTP_CONTENT_TYPE' => 'application/json'
+                'HTTP_CONTENT_TYPE' => 'application/json',
             ]);
 
-            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog();
+            $middleware = new \NcooDev\HormLogger\Middleware\SaveLog;
             $middleware->handle($request, function ($req) {
                 return response(['result' => 'success'], 201);
             });
@@ -400,8 +398,8 @@ describe('HORM Logger Middleware', function () {
         it('applies middleware to route groups correctly', function () {
             Route::middleware(\NcooDev\HormLogger\Middleware\SaveLog::class)
                 ->group(function () {
-                    Route::get('/group/endpoint1', fn() => response('endpoint1'));
-                    Route::get('/group/endpoint2', fn() => response('endpoint2'));
+                    Route::get('/group/endpoint1', fn () => response('endpoint1'));
+                    Route::get('/group/endpoint2', fn () => response('endpoint2'));
                 });
 
             get('/group/endpoint1');

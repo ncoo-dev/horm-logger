@@ -18,7 +18,7 @@ describe('HORM Logger API Endpoint', function () {
             expect($testEntry)->not->toBeNull();
             $testEntry->delete(); // Clean up test entry
         } catch (\Exception $e) {
-            throw new \Exception('Factory failed: ' . $e->getMessage());
+            throw new \Exception('Factory failed: '.$e->getMessage());
         }
 
         // Create test entries with specific timestamps
@@ -72,7 +72,7 @@ describe('HORM Logger API Endpoint', function () {
         it('returns entries from specified start time', function () {
             // Create entries directly in the test instead of relying on beforeEach
             testTime()->freeze('2024-01-01 00:00:00');
-            
+
             $entries = Entry::factory(6)->sequence(
                 ['created_at' => now()->subMinutes(10)],
                 ['created_at' => now()->subSecond()],
@@ -81,52 +81,52 @@ describe('HORM Logger API Endpoint', function () {
                 ['created_at' => now()->addMinutes(3)],
                 ['created_at' => now()->addMinutes(4)],
             )->create();
-            
+
             $entryCurrent = $entries[2]; // The entry with created_at = now()
-            
+
             // Verify entries exist
             expect(Entry::count())->toBe(6);
-            
+
             $currentTime = now()->toDateTimeString();
-            
-            $response = getJson('/horm-api-endpoint?' . http_build_query([
+
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => $currentTime,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
 
             $response->assertSuccessful();
-            
+
             // Check how many entries should be returned (from current time onward)
             $expectedEntries = Entry::where('created_at', '>=', $currentTime)->get();
             expect($expectedEntries)->toHaveCount(4);
-            
+
             $responseData = $response->json();
             expect($responseData)->toHaveKey('data');
             expect(count($responseData['data']))->toBe(4);
-            
+
             $response->assertJson(function (AssertableJson $json) use ($entryCurrent) {
-                    $json->has('data', 4) // Should return 4 entries (current and 3 after)
-                        ->has('data.0', function (AssertableJson $json) use ($entryCurrent) {
-                            $json->has('id')
-                                ->where('id', $entryCurrent->id)
-                                ->where('type', $entryCurrent->type->value)
-                                ->where('direction', $entryCurrent->direction->value)
-                                ->where('url', $entryCurrent->url)
-                                ->where('status_code', $entryCurrent->status_code)
-                                ->where('method', $entryCurrent->method->value)
-                                ->where('request', $entryCurrent->request)
-                                ->where('response', $entryCurrent->response)
-                                ->where('content', $entryCurrent->content)
-                                ->where('created_at', $entryCurrent->created_at->format('Y-m-d H:i:s'))
-                                ->where('updated_at', $entryCurrent->updated_at->format('Y-m-d H:i:s'));
-                        });
-                });
+                $json->has('data', 4) // Should return 4 entries (current and 3 after)
+                    ->has('data.0', function (AssertableJson $json) use ($entryCurrent) {
+                        $json->has('id')
+                            ->where('id', $entryCurrent->id)
+                            ->where('type', $entryCurrent->type->value)
+                            ->where('direction', $entryCurrent->direction->value)
+                            ->where('url', $entryCurrent->url)
+                            ->where('status_code', $entryCurrent->status_code)
+                            ->where('method', $entryCurrent->method->value)
+                            ->where('request', $entryCurrent->request)
+                            ->where('response', $entryCurrent->response)
+                            ->where('content', $entryCurrent->content)
+                            ->where('created_at', $entryCurrent->created_at->format('Y-m-d H:i:s'))
+                            ->where('updated_at', $entryCurrent->updated_at->format('Y-m-d H:i:s'));
+                    });
+            });
         });
 
         it('returns entries within date range', function () {
             testTime()->freeze('2024-01-01 00:00:00');
-            
+
             Entry::factory(6)->sequence(
                 ['created_at' => now()->subMinutes(10)],
                 ['created_at' => now()->subSecond()],
@@ -135,8 +135,8 @@ describe('HORM Logger API Endpoint', function () {
                 ['created_at' => now()->addMinutes(3)],
                 ['created_at' => now()->addMinutes(4)],
             )->create();
-            
-            $response = getJson('/horm-api-endpoint?' . http_build_query([
+
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->subMinutes(5)->toDateTimeString(),
             ]), [
                 'horm-check-secret' => 'test-secret-key',
@@ -150,14 +150,14 @@ describe('HORM Logger API Endpoint', function () {
 
         it('returns empty data when no entries match criteria', function () {
             testTime()->freeze('2024-01-01 00:00:00');
-            
+
             Entry::factory(3)->sequence(
                 ['created_at' => now()->subMinutes(10)],
                 ['created_at' => now()->subSecond()],
                 ['created_at' => now()],
             )->create();
-            
-            $response = getJson('/horm-api-endpoint?' . http_build_query([
+
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->addMinutes(10)->toDateTimeString(),
             ]), [
                 'horm-check-secret' => 'test-secret-key',
@@ -169,13 +169,13 @@ describe('HORM Logger API Endpoint', function () {
 
         it('limits results to maximum entries per request', function () {
             testTime()->freeze('2024-01-01 00:00:00');
-            
+
             // Create more entries than the limit
             Entry::factory(1500)->create([
                 'created_at' => now()->addMinutes(1),
             ]);
 
-            $response = getJson('/horm-api-endpoint?' . http_build_query([
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->toDateTimeString(),
             ]), [
                 'horm-check-secret' => 'test-secret-key',
@@ -215,7 +215,7 @@ describe('HORM Logger API Endpoint', function () {
 
     describe('Error Handling', function () {
         it('handles invalid date formats gracefully', function () {
-            $response = getJson('/horm-api-endpoint?' . http_build_query([
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => 'invalid-date-format',
             ]), [
                 'horm-check-secret' => 'test-secret-key',

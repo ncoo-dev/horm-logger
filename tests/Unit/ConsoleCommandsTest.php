@@ -1,6 +1,5 @@
 <?php
 
-use Carbon\Carbon;
 use NcooDev\HormLogger\Models\Entry;
 
 use function Pest\Laravel\artisan;
@@ -31,7 +30,7 @@ describe('HORM Logger Console Commands', function () {
 
             // Create entries with different ages
             Entry::factory()->create(['created_at' => now()->subDays(5)]); // Should be pruned
-            Entry::factory()->create(['created_at' => now()->subDays(3)]); // Should be pruned  
+            Entry::factory()->create(['created_at' => now()->subDays(3)]); // Should be pruned
             Entry::factory()->create(['created_at' => now()->subDays(1)]); // Should be kept
             Entry::factory()->create(['created_at' => now()]); // Should be kept
         });
@@ -87,7 +86,7 @@ describe('HORM Logger Console Commands', function () {
 
         it('lists horm commands in artisan list', function () {
             $result = artisan('list')->run();
-            
+
             expect($result)->toBe(0); // Command ran successfully
         });
     });

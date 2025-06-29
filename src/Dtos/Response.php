@@ -34,7 +34,7 @@ class Response
     public static function fromDB(string $reponse): self
     {
         $info = unserialize(base64_decode($reponse));
-        
+
         if (is_array($info)) {
             return new self(
                 headers: $info['headers'],
@@ -42,7 +42,7 @@ class Response
                 times: $info['times'],
             );
         }
-        
+
         // If it's already an object instance, return it
         return $info;
     }
