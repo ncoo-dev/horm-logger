@@ -5,6 +5,7 @@ namespace NcooDev\HormLogger\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
+use NcooDev\HormLogger\Enums\Method;
 use NcooDev\HormLogger\Models\Entry;
 
 class EntryFactory extends Factory
@@ -17,7 +18,7 @@ class EntryFactory extends Factory
             'direction' => fake()->randomElement(Direction::cases()),
             'url' => fake()->url,
             'type' => fake()->randomElement(EntryType::cases()),
-            'method' => fake()->randomElement(['GET', 'POST', 'PUT', 'DELETE']),
+            'method' => fake()->randomElement(Method::cases()),
             'request' => base64_encode(serialize([
                 'headers' => [
                     'Accept' => 'application/json',

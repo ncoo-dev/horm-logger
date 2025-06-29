@@ -33,7 +33,18 @@ class Response
 
     public static function fromDB(string $reponse): self
     {
-        return unserialize(base64_decode($reponse));
+        $info = unserialize(base64_decode($reponse));
+        
+        if (is_array($info)) {
+            return new self(
+                headers: $info['headers'],
+                status: $info['status'],
+                times: $info['times'],
+            );
+        }
+        
+        // If it's already an object instance, return it
+        return $info;
     }
 
     public function toArray(): array

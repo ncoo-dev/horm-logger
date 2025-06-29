@@ -1,88 +1,169 @@
 <?php
 
 use Illuminate\Testing\Fluent\AssertableJson;
+use NcooDev\HormLogger\Models\Entry;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\getJson;
 use function Spatie\PestPluginTestTime\testTime;
 
-describe('API', function () {
+describe('HORM Logger API Endpoint', function () {
 
     beforeEach(function () {
         testTime()->freeze('2024-01-01 00:00:00');
 
+        // Create test entries with specific timestamps
         [
-            $this->entry00,
-            $this->entry0,
-            $this->entry1,
-            $this->entry2,
-            $this->entry3,
-            $this->entry4,
-        ] =
-            \NcooDev\HormLogger\Models\Entry::factory(6)->sequence(
-                ['created_at' => now()->subMinutes(10)],
-                ['created_at' => now()->subSecond()],
-                ['created_at' => now()],
-                ['created_at' => now()->addSeconds(1)],
-                ['created_at' => now()->addMinutes(3)],
-                ['created_at' => now()->addMinutes(4)],
-            )->create();
+            $this->entryOld,
+            $this->entryJustBefore,
+            $this->entryCurrent,
+            $this->entryAfter1,
+            $this->entryAfter2,
+            $this->entryAfter3,
+        ] = Entry::factory(6)->sequence(
+            ['created_at' => now()->subMinutes(10)],
+            ['created_at' => now()->subSecond()],
+            ['created_at' => now()],
+            ['created_at' => now()->addSeconds(1)],
+            ['created_at' => now()->addMinutes(3)],
+            ['created_at' => now()->addMinutes(4)],
+        )->create();
 
-        config()->set('horm.endpoint', [
-            'enabled' => true,
-            'secret' => 'my-secret',
-            'url' => 'horm-my-url',
-        ]);
-
+        // Configuration is already set in TestCase, just refresh the service provider
         $this->refreshServiceProvider();
-
     });
 
-    it('can or not connect with secredt', function ($secret, $expected) {
-        $response = $this->get('/horm-my-url', [
-            'horm-check-secret' => $secret,
+    describe('Authentication', function () {
+        it('denies access with invalid secret', function ($secret, $expectedStatus) {
+            $response = get('/horm-api-endpoint', [
+                'horm-check-secret' => $secret,
+            ]);
+
+            $response->assertStatus($expectedStatus);
+        })->with([
+            'wrong secret' => ['wrong-secret', 403],
+            'empty secret' => ['', 403],
+            'null secret' => [null, 403],
         ]);
 
-        $response->assertStatus($expected);
-    })->with([
-        'bad-secret' => ['bad-secret', 403],
-        'empty secret' => ['', 403],
-        'Good secret' => ['my-secret', 302], // argument attendu
-    ]);
+        it('allows access with valid secret but requires parameters', function () {
+            $response = get('/horm-api-endpoint', [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
 
-    it('cannot get entries without start', function () {
-        $response = get('/horm-my-url', [
-            'horm-check-secret' => 'my-secret',
-        ]);
-
-        $response->assertStatus(302);
+            // Should redirect because 'start' parameter is missing
+            $response->assertStatus(302);
+        });
     });
 
-    it('can get entries', function () {
-        $entries = getJson('/horm-my-url?'.http_build_query([
-            'start' => now()->toDateTimeString(),
-        ]), [
-            'horm-check-secret' => 'my-secret',
-        ])->assertSuccessful()
-            ->assertJson(function (AssertableJson $json) {
-                $json->has('data', 4)
-                    ->has('data.0', function (AssertableJson $json) {
+    describe('Data Retrieval', function () {
+        it('returns entries from specified start time', function () {
+            $response = getJson('/horm-api-endpoint?' . http_build_query([
+                'start' => now()->toDateTimeString(),
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
 
-                        $json->has('id')
-                            ->where('id', $this->entry1->id)
-                            ->where('type', $this->entry1->type)
-                            ->where('direction', $this->entry1->direction)
-                            ->where('url', $this->entry1->url)
-                            ->where('status_code', $this->entry1->status_code)
-                            ->where('method', $this->entry1->method)
-                            ->where('request', $this->entry1->request)
-                            ->where('response', $this->entry1->response)
-                            ->where('content', $this->entry1->content)
-                            ->where('created_at', $this->entry1->created_at->format('Y-m-d H:i:s'))
-                            ->where('updated_at', $this->entry1->updated_at->format('Y-m-d H:i:s'));
-                    });
-            });
+            $response->assertSuccessful()
+                ->assertJson(function (AssertableJson $json) {
+                    $json->has('data', 4) // Should return 4 entries (current and 3 after)
+                        ->has('data.0', function (AssertableJson $json) {
+                            $json->has('id')
+                                ->where('id', $this->entryCurrent->id)
+                                ->where('type', $this->entryCurrent->type->value)
+                                ->where('direction', $this->entryCurrent->direction->value)
+                                ->where('url', $this->entryCurrent->url)
+                                ->where('status_code', $this->entryCurrent->status_code)
+                                ->where('method', $this->entryCurrent->method->value)
+                                ->where('request', $this->entryCurrent->request)
+                                ->where('response', $this->entryCurrent->response)
+                                ->where('content', $this->entryCurrent->content)
+                                ->where('created_at', $this->entryCurrent->created_at->format('Y-m-d H:i:s'))
+                                ->where('updated_at', $this->entryCurrent->updated_at->format('Y-m-d H:i:s'));
+                        });
+                });
+        });
 
+        it('returns entries within date range', function () {
+            $response = getJson('/horm-api-endpoint?' . http_build_query([
+                'from' => now()->subMinutes(5)->toDateTimeString(),
+                'to' => now()->addMinutes(2)->toDateTimeString(),
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertSuccessful()
+                ->assertJson(function (AssertableJson $json) {
+                    $json->has('data', 2); // Should return 2 entries within range
+                });
+        });
+
+        it('returns empty data when no entries match criteria', function () {
+            $response = getJson('/horm-api-endpoint?' . http_build_query([
+                'start' => now()->addMinutes(10)->toDateTimeString(),
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertSuccessful()
+                ->assertJson(['data' => []]);
+        });
+
+        it('limits results to maximum entries per request', function () {
+            // Create more entries than the limit
+            Entry::factory(1500)->create([
+                'created_at' => now()->addMinutes(1),
+            ]);
+
+            $response = getJson('/horm-api-endpoint?' . http_build_query([
+                'start' => now()->toDateTimeString(),
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertSuccessful()
+                ->assertJson(function (AssertableJson $json) {
+                    $json->has('data', 1000); // Should be limited to 1000 entries
+                });
+        });
+    });
+
+    describe('Configuration', function () {
+        it('responds with 404 when endpoint is disabled', function () {
+            config()->set('horm.endpoint.enabled', false);
+            $this->refreshServiceProvider();
+
+            $response = get('/horm-api-endpoint', [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertStatus(404);
+        });
+
+        it('uses custom endpoint URL from configuration', function () {
+            config()->set('horm.endpoint.url', 'custom-horm-endpoint');
+            $this->refreshServiceProvider();
+
+            $response = get('/custom-horm-endpoint', [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            // Should not be 404, indicating the custom URL is working
+            $response->assertStatus(302); // Missing parameters, but endpoint exists
+        });
+    });
+
+    describe('Error Handling', function () {
+        it('handles invalid date formats gracefully', function () {
+            $response = getJson('/horm-api-endpoint?' . http_build_query([
+                'start' => 'invalid-date-format',
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            // Should handle gracefully, either with validation error or empty result
+            expect($response->getStatusCode())->toBeIn([200, 302, 422]);
+        });
     });
 
 });

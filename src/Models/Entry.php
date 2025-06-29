@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use NcooDev\HormLogger\Database\Factories\EntryFactory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
+use NcooDev\HormLogger\Enums\Method;
 use NcooDev\HormLogger\Exceptions\InvalidConfiguration;
 
 class Entry extends Model
@@ -22,6 +23,7 @@ class Entry extends Model
 
     protected $casts = [
         'type' => EntryType::class,
+        'method' => Method::class,
         'body' => 'array',
         'direction' => Direction::class,
     ];
@@ -48,7 +50,7 @@ class Entry extends Model
 
     public function prunable(): Builder
     {
-        $days = config('horm.entries.keep_history_for_days') ?? 2;
+        $days = config('horm.model.keep_history_for_days') ?? 2;
 
         return static::where('created_at', '<=', now()->subDays($days));
     }

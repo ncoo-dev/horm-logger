@@ -8,6 +8,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
+// Create a minimal User model for testing if it doesn't exist
+if (!class_exists('User')) {
+    class User extends \Illuminate\Foundation\Auth\User
+    {
+        protected $fillable = ['name', 'email', 'password'];
+    }
+}
+
 abstract class TestCase extends OrchestraTestCase
 {
     use RefreshDatabase;
@@ -15,12 +23,17 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        //        \Illuminate\Support\Facades\Event::fake();
-        $this->setUpDatabase();
+        
+        // Setup factories
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'NcooDev\\Horm\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'NcooDev\\HormLogger\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
-
+        
+        // Setup database after parent setup to ensure proper configuration
+        $this->setUpDatabase();
+        
+        // Ensure routes are registered at the beginning
+        $this->refreshServiceProvider();
     }
 
     protected function getPackageProviders($app)
@@ -32,40 +45,81 @@ abstract class TestCase extends OrchestraTestCase
 
     public function getEnvironmentSetUp($app)
     {
-        config()->set('horm.database_connection', 'sqlite');
+        // Setup in-memory SQLite database for testing
+        config()->set('horm.database.connection', 'sqlite');
         config()->set('database.default', 'sqlite');
         config()->set('database.connections.sqlite', [
             'driver' => 'sqlite',
             'database' => ':memory:',
+            'prefix' => '',
         ]);
 
-        config()->set('auth.providers.users.model', User::class);
+        // Set default HORM configuration for testing
+        config()->set('horm.model.entry', \NcooDev\HormLogger\Models\Entry::class);
+        config()->set('horm.model.keep_history_for_days', 2);
+        config()->set('horm.endpoint.enabled', true);
+        config()->set('horm.endpoint.secret', 'test-secret-key');
+        config()->set('horm.endpoint.url', 'horm-api-endpoint');
+
+        // Set application encryption key
         config()->set('app.key', 'base64:'.base64_encode(
             Encrypter::generateKey(config()['app.cipher'])
         ));
     }
 
-    protected function setUpDatabase()
+    protected function setUpDatabase(): void
     {
         $this->migrateHormTable();
-
-        //        $this->seedModels(Article::class, User::class);
     }
 
-    protected function migrateHormTable()
+    protected function migrateHormTable(): void
     {
-        require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
+        $tableName = config('horm.database.table_name', 'horm_entries');
+        $connection = config('horm.database.connection') ?: config('database.default');
+        
+        // Check if table already exists to avoid "table already exists" error
+        if (!\Illuminate\Support\Facades\Schema::connection($connection)->hasTable($tableName)) {
+            // Check if class is already declared to avoid "class already in use" error
+            if (!class_exists('CreateHormEntriesTable')) {
+                require_once __DIR__.'/../database/migrations/create_horm_entries_table.php.stub';
+            }
 
-        (new \CreateHormEntriesTable)->up();
+            (new \CreateHormEntriesTable)->up();
+        }
     }
 
-    public function markTestAsPassed(): void
+    protected function refreshServiceProvider(): void
     {
-        $this->assertTrue(true);
+        // Ensure the service provider is properly registered and booted
+        $this->app->register(HormLoggerServiceProvider::class);
+        
+        // Force boot the provider
+        $provider = $this->app->getProvider(HormLoggerServiceProvider::class);
+        if ($provider) {
+            $provider->packageRegistered();
+            $provider->packageBooted();
+        }
     }
 
-    public function refreshServiceProvider(): void
+    /**
+     * Get the default HORM configuration for testing
+     */
+    protected function getDefaultHormConfig(): array
     {
-        (new HormLoggerServiceProvider($this->app))->packageBooted();
+        return [
+            'database' => [
+                'connection' => 'sqlite',
+                'table_name' => 'horm_entries',
+            ],
+            'model' => [
+                'entry' => \NcooDev\HormLogger\Models\Entry::class,
+                'keep_history_for_days' => 2,
+            ],
+            'endpoint' => [
+                'enabled' => true,
+                'secret' => 'test-secret',
+                'url' => 'horm-test-endpoint',
+            ],
+        ];
     }
 }
