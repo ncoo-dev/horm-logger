@@ -51,7 +51,7 @@ describe('HORM Logger Configuration', function () {
 
             expect(function () {
                 $modelClass = config('horm.model.entry');
-                if (!class_exists($modelClass)) {
+                if (! class_exists($modelClass)) {
                     throw new InvalidConfiguration("Entry model {$modelClass} does not exist");
                 }
             })->toThrow(InvalidConfiguration::class);
@@ -127,9 +127,9 @@ describe('HORM Logger Configuration', function () {
             foreach ($invalidUrls as $invalidUrl) {
                 config()->set('horm.endpoint.url', $invalidUrl);
 
-                expect(function () use ($invalidUrl) {
+                expect(function () {
                     $url = config('horm.endpoint.url');
-                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $url)) {
+                    if (! preg_match('/^[a-zA-Z0-9_-]+$/', $url)) {
                         throw new InvalidConfiguration("Invalid endpoint URL format: {$url}");
                     }
                 })->toThrow(InvalidConfiguration::class);
@@ -198,9 +198,9 @@ describe('HORM Logger Configuration', function () {
         it('respects configuration changes during runtime', function () {
             $originalValue = config('horm.endpoint.enabled');
 
-            config()->set('horm.endpoint.enabled', !$originalValue);
+            config()->set('horm.endpoint.enabled', ! $originalValue);
 
-            expect(config('horm.endpoint.enabled'))->toBe(!$originalValue);
+            expect(config('horm.endpoint.enabled'))->toBe(! $originalValue);
         });
     });
 

@@ -16,7 +16,7 @@ describe('HORM Logger Full Integration', function () {
         it('automatically logs complete HTTP client interactions', function () {
             // Clear existing entries for this test
             Entry::query()->delete();
-            
+
             // Setup HTTP fakes for different scenarios
             Http::fake([
                 'http://api.success.example.com/*' => Http::response(['status' => 'success'], 200, ['Content-Type' => 'application/json']),
@@ -31,7 +31,7 @@ describe('HORM Logger Full Integration', function () {
                 ->post('http://api.success.example.com/users', ['name' => 'John Doe']);
 
             expect($response1->successful())->toBeTrue();
-            
+
             // Accept that we might get duplicate entries due to multiple event listener registrations
             // The important thing is that we get at least one entry with the right data
             expect(Entry::count())->toBeGreaterThanOrEqual(1);
@@ -107,9 +107,9 @@ describe('HORM Logger Full Integration', function () {
         it('logs incoming requests when middleware is applied', function () {
             Route::middleware(\NcooDev\HormLogger\Middleware\SaveLog::class)
                 ->group(function () {
-                    Route::get('/api/users', fn() => response()->json(['users' => []]));
-                    Route::post('/api/users', fn() => response()->json(['id' => 1], 201));
-                    Route::get('/api/error', fn() => response('Not found', 404));
+                    Route::get('/api/users', fn () => response()->json(['users' => []]));
+                    Route::post('/api/users', fn () => response()->json(['id' => 1], 201));
+                    Route::get('/api/error', fn () => response('Not found', 404));
                 });
 
             expect(Entry::count())->toBe(0);
@@ -196,7 +196,7 @@ describe('HORM Logger Full Integration', function () {
             expect($wrongSecretResponse->status())->toBe(403);
 
             // Test valid request
-            $validResponse = getJson('/horm-integration-api?' . http_build_query([
+            $validResponse = getJson('/horm-integration-api?'.http_build_query([
                 'start' => now()->subDay()->toDateTimeString(),
             ]), [
                 'horm-check-secret' => 'integration-test-secret',
@@ -225,14 +225,14 @@ describe('HORM Logger Full Integration', function () {
         it('filters and limits API responses correctly', function () {
             // Clear existing entries and create fresh ones for this test
             Entry::query()->delete();
-            
+
             // Create entries across different dates
             Entry::factory()->create(['created_at' => now()->subDays(2)]);
             Entry::factory()->create(['created_at' => now()->subDay()]);
             Entry::factory()->create(['created_at' => now()]);
 
             // Test date filtering - using 'start' parameter only (as controller only uses this)
-            $filteredResponse = getJson('/horm-integration-api?' . http_build_query([
+            $filteredResponse = getJson('/horm-integration-api?'.http_build_query([
                 'start' => now()->subDay()->startOfDay()->toDateTimeString(),
             ]), [
                 'horm-check-secret' => 'integration-test-secret',
@@ -314,7 +314,7 @@ describe('HORM Logger Full Integration', function () {
                         'method' => 'GET',
                         'url' => "http://concurrent.example.com/endpoint-{$i}",
                         'headers' => [],
-                        'body' => ''
+                        'body' => '',
                     ])),
                     'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
                     'content' => base64_encode(serialize('OK')),
@@ -349,7 +349,7 @@ describe('HORM Logger Full Integration', function () {
                     'method' => 'POST',
                     'url' => 'http://large.example.com/upload',
                     'headers' => ['Content-Type' => 'application/json'],
-                    'body' => json_encode(['data' => $largePayload])
+                    'body' => json_encode(['data' => $largePayload]),
                 ])),
                 'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.5])),
                 'content' => base64_encode(serialize($largePayload)),
@@ -378,7 +378,7 @@ describe('HORM Logger Full Integration', function () {
                         'method' => 'GET',
                         'url' => "http://stress.example.com/endpoint-{$i}",
                         'headers' => [],
-                        'body' => ''
+                        'body' => '',
                     ])),
                     'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
                     'content' => base64_encode(serialize('OK')),
@@ -411,7 +411,7 @@ describe('HORM Logger Full Integration', function () {
         it('simulates typical API integration monitoring', function () {
             // Clear existing entries for this test
             Entry::query()->delete();
-            
+
             Http::fake([
                 'http://api.stripe.example.com/*' => Http::response(['id' => 'ch_123'], 200),
                 'http://api.sendgrid.example.com/*' => Http::response(['message' => 'queued'], 202),
@@ -446,7 +446,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify all external API calls were captured
             $entries = Entry::all();
-            $hosts = $entries->pluck('url')->map(fn($url) => parse_url($url, PHP_URL_HOST));
+            $hosts = $entries->pluck('url')->map(fn ($url) => parse_url($url, PHP_URL_HOST));
 
             expect($hosts)->toContain('api.stripe.example.com')
                 ->toContain('api.sendgrid.example.com')
