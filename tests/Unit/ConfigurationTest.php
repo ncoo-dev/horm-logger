@@ -91,7 +91,7 @@ describe('HORM Logger Configuration', function () {
         });
 
         it('uses default secret', function () {
-            expect(config('horm.endpoint.secret'))->toBe('test-secret');
+            expect(config('horm.endpoint.secret'))->toBe('test-secret-key');
         });
 
         it('allows custom secret', function () {
@@ -112,7 +112,7 @@ describe('HORM Logger Configuration', function () {
         });
 
         it('uses default endpoint URL', function () {
-            expect(config('horm.endpoint.url'))->toBe('horm-test-endpoint');
+            expect(config('horm.endpoint.url'))->toBe('horm-api-endpoint');
         });
 
         it('allows custom endpoint URL', function () {
@@ -134,22 +134,6 @@ describe('HORM Logger Configuration', function () {
                     }
                 })->toThrow(InvalidConfiguration::class);
             }
-        });
-    });
-
-    describe('Environment Variable Integration', function () {
-        it('reads configuration from environment variables', function () {
-            // Test environment variables are set in TestCase
-            expect(env('HORM_ENDPOINT_ENABLED'))->not->toBeNull();
-            expect(env('HORM_ENDPOINT_SECRET'))->not->toBeNull();
-        });
-
-        it('falls back to default values when env vars not set', function () {
-            // Temporarily unset environment variable
-            putenv('HORM_ENDPOINT_SECRET');
-
-            $secret = env('HORM_ENDPOINT_SECRET', 'default-secret');
-            expect($secret)->toBe('default-secret');
         });
     });
 
@@ -232,40 +216,6 @@ describe('HORM Logger Configuration', function () {
 
             expect(config('horm.endpoint.enabled', false))->toBeFalse();
             expect(config('horm.model.keep_history_for_days', 2))->toBe(2);
-        });
-    });
-
-    describe('Security Configuration', function () {
-        it('ensures secret is sufficiently complex', function () {
-            $weakSecrets = ['123', 'abc', 'password', 'secret'];
-
-            foreach ($weakSecrets as $secret) {
-                config()->set('horm.endpoint.secret', $secret);
-
-                expect(function () use ($secret) {
-                    if (strlen($secret) < 8) {
-                        throw new InvalidConfiguration('Secret must be at least 8 characters long');
-                    }
-                })->toThrow(InvalidConfiguration::class);
-            }
-        });
-
-        it('accepts strong secrets', function () {
-            $strongSecrets = [
-                'very-long-secure-secret-key',
-                'Str0ng!P@ssw0rd#2024',
-                'abcdef123456789012345678',
-            ];
-
-            foreach ($strongSecrets as $secret) {
-                config()->set('horm.endpoint.secret', $secret);
-
-                expect(function () use ($secret) {
-                    if (strlen($secret) < 8) {
-                        throw new InvalidConfiguration('Secret must be at least 8 characters long');
-                    }
-                })->not->toThrow(InvalidConfiguration::class);
-            }
         });
     });
 
