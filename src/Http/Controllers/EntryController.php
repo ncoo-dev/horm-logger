@@ -22,13 +22,17 @@ class EntryController
             return EntryResource::collection([]);
         }
 
-        $maxEntries = 1000;
-        $limitCount = min($entriesCount, $maxEntries);
+        $comparableEntry = $model::query()
+            ->offset(min($entriesCount - 1, 1000))
+            ->where('created_at', '>=', $validated['start'])
+            ->oldest()
+            ->limit(1)
+            ->first();
 
         return EntryResource::collection($model::query()
             ->where('created_at', '>=', $validated['start'])
+            ->where('created_at', '<=', $comparableEntry->created_at)
             ->oldest()
-            ->limit($limitCount)
             ->get()
         );
     }
