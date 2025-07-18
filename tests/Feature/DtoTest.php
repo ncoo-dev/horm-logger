@@ -18,7 +18,7 @@ describe('HORM Logger DTOs', function () {
             ]);
 
             Http::withHeaders(['Authorization' => 'Bearer token'])
-                ->post('https://example.com/api', ['data' => 'test']);
+                ->post('https://example.com/api?param=value', ['data' => 'test']);
 
             $recorded = Http::recorded();
             [$httpClientRequest] = $recorded[0];
@@ -28,9 +28,11 @@ describe('HORM Logger DTOs', function () {
             expect($requestDto)
                 ->toBeInstanceOf(RequestDto::class)
                 ->and($requestDto->method)->toBe('POST')
-                ->and($requestDto->url)->toBe('https://example.com/api')
+                ->and($requestDto->url)->toBe('https://example.com/api?param=value')
                 ->and($requestDto->headers)->toBeArray()
-                ->and($requestDto->body)->toBe('{"data":"test"}');
+                ->and($requestDto->body)->toBe('{"data":"test"}')
+                ->and($requestDto->query)->toBeArray()
+                ->and($requestDto->query['param'])->toBe('value');
         });
 
         it('creates Request DTO from Laravel HTTP request', function () {
@@ -46,7 +48,9 @@ describe('HORM Logger DTOs', function () {
                 ->and($requestDto->method)->toBe('GET')
                 ->and($requestDto->url)->toBe('http://localhost/api/test')
                 ->and($requestDto->headers)->toBeArray()
-                ->and($requestDto->body)->toBeString();
+                ->and($requestDto->body)->toBeString()
+                ->and($requestDto->query)->toBeArray()
+                ->and($requestDto->query['param'])->toBe('value');
         });
 
         it('serializes and deserializes Request DTO correctly', function () {
@@ -54,7 +58,8 @@ describe('HORM Logger DTOs', function () {
                 method: 'POST',
                 url: 'https://api.example.com/data',
                 headers: ['Content-Type' => 'application/json', 'Authorization' => 'Bearer token'],
-                body: '{"test": "data"}'
+                body: '{"test": "data"}',
+                query: ['param' => 'value']
             );
 
             $serialized = base64_encode(serialize($originalRequest));
@@ -65,7 +70,8 @@ describe('HORM Logger DTOs', function () {
                 ->and($deserialized->method)->toBe($originalRequest->method)
                 ->and($deserialized->url)->toBe($originalRequest->url)
                 ->and($deserialized->headers)->toBe($originalRequest->headers)
-                ->and($deserialized->body)->toBe($originalRequest->body);
+                ->and($deserialized->body)->toBe($originalRequest->body)
+                ->and($deserialized->query)->toBe($originalRequest->query);
         });
 
         it('handles empty request body', function () {
@@ -99,26 +105,29 @@ describe('HORM Logger DTOs', function () {
                 ->and($responseDto->headers)->toBeArray()
                 ->and($responseDto->times)->when(
                     ! is_null($responseDto->times),
-                    fn ($expectation) => $expectation->toBeFloat()
-                );
+                    fn ($expectation) => $expectation->toBeString()
+                )
+                ->and($responseDto->body)->toBe('{"message": "success"}');
         });
 
         it('creates Response DTO from Laravel HTTP response', function () {
             $httpResponse = createResponse('{"data": "test"}', 201, ['Content-Type' => 'application/json']);
-            $responseDto = ResponseDto::fromHttpResponse($httpResponse, 0.5);
+            $responseDto = ResponseDto::fromHttpResponse($httpResponse, '0.5');
 
             expect($responseDto)
                 ->toBeInstanceOf(ResponseDto::class)
                 ->and($responseDto->status)->toBe(201)
                 ->and($responseDto->headers)->toBeArray()
-                ->and($responseDto->times)->toBe(0.5);
+                ->and($responseDto->times)->toBe('0.5')
+                ->and($responseDto->body)->toBe('{"data": "test"}');
         });
 
         it('serializes and deserializes Response DTO correctly', function () {
             $originalResponse = new ResponseDto(
                 status: 200,
                 headers: ['Content-Type' => 'application/json'],
-                times: 1.25
+                times: '1.25',
+                body: '{"success": true}'
             );
 
             $serialized = base64_encode(serialize($originalResponse));
@@ -128,7 +137,8 @@ describe('HORM Logger DTOs', function () {
                 ->toBeInstanceOf(ResponseDto::class)
                 ->and($deserialized->status)->toBe($originalResponse->status)
                 ->and($deserialized->headers)->toBe($originalResponse->headers)
-                ->and($deserialized->times)->toBe($originalResponse->times);
+                ->and($deserialized->times)->toBe($originalResponse->times)
+                ->and($deserialized->body)->toBe($originalResponse->body);
         });
 
         it('handles different response status codes', function () {
@@ -178,12 +188,14 @@ describe('HORM Logger DTOs', function () {
                     method: 'GET',
                     url: 'https://api.test.com/endpoint',
                     headers: ['Content-Type' => 'application/json'],
-                    body: null
+                    body: null,
+                    query: null
                 ))),
                 'response' => base64_encode(serialize(new ResponseDto(
                     status: 200,
                     headers: ['Content-Type' => 'application/json'],
-                    times: 0.5
+                    times: '0.5',
+                    body: '{"result": "success"}'
                 ))),
                 'content' => base64_encode(serialize('{"result": "success"}')),
             ]);

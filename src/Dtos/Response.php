@@ -9,7 +9,8 @@ class Response
     public function __construct(
         public array $headers,
         public int $status,
-        public ?float $times,
+        public ?string $times,
+        public ?string $body = null,
     ) {}
 
     public static function fromHttpClientResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response): self
@@ -18,17 +19,18 @@ class Response
             headers: $response->headers(),
             status: $response->status(),
             times: $response->transferStats?->getTransferTime(),
+            body: $response->body(),
         );
     }
 
-    public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?float $times = null): self
+    public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?string $times = null): self
     {
         return new self(
             headers: $response->headers->all(),
             status: $response->status(),
             times: $times,
+            body: $response->getContent(),
         );
-
     }
 
     public static function fromDB(string $reponse): self
@@ -37,9 +39,10 @@ class Response
 
         if (is_array($info)) {
             return new self(
-                headers: $info['headers'],
-                status: $info['status'],
-                times: $info['times'],
+                headers: $info['headers'] ?? [],
+                status: $info['status'] ?? 200,
+                times: $info['times'] ?? null,
+                body: $info['body'] ?? null,
             );
         }
 
@@ -53,6 +56,7 @@ class Response
             'headers' => $this->headers,
             'status' => $this->status,
             'times' => $this->times,
+            'body' => $this->body,
         ];
     }
 }
