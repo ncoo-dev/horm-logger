@@ -44,11 +44,12 @@ class Request
             );
         }
 
+        // If it's an object, access properties directly
         return new self(
             headers: $info->headers,
             method: $info->method,
             url: $info->url,
-            body: $info->getContent(),
+            body: $info->body,
         );
     }
 

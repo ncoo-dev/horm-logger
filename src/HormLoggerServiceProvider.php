@@ -32,6 +32,14 @@ class HormLoggerServiceProvider extends PackageServiceProvider
             ->hasCommand(\NcooDev\HormLogger\Console\PruneCommand::class);
     }
 
+    public function packageRegistered(): void
+    {
+        // Register middleware
+        $router = $this->app['router'];
+        $router->aliasMiddleware('horm.check-secret', RequiresSecret::class);
+        $router->aliasMiddleware('horm.save-log', \NcooDev\HormLogger\Middleware\SaveLog::class);
+    }
+
     public function packageBooted(): void
     {
         Event::listen(
@@ -44,7 +52,6 @@ class HormLoggerServiceProvider extends PackageServiceProvider
         );
 
         $this->registerHormEndpoint();
-
     }
 
     public static function determineEntryModel(): string
@@ -80,7 +87,7 @@ class HormLoggerServiceProvider extends PackageServiceProvider
             return $this;
         }
         Route::get(config('horm.endpoint.url'), EntryController::class)
-            ->middleware(RequiresSecret::class);
+            ->middleware('horm.check-secret');
 
         return $this;
     }
