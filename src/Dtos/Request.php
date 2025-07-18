@@ -19,7 +19,7 @@ class Request
         if (isset($url['query'])) {
             parse_str($url['query'], $query);
         }
-        
+
         return new self(
             headers: $request->headers(),
             method: $request->method(),
