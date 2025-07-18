@@ -2,6 +2,16 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.2.0 - 2025-07-18
+
+### What's Changed
+
+* chore(deps): bump aglipanci/laravel-pint-action from 2.4 to 2.5 by @dependabot[bot] in https://github.com/ncoo-dev/horm-logger/pull/7
+* chore(deps): bump dependabot/fetch-metadata from 2.3.0 to 2.4.0 by @dependabot[bot] in https://github.com/ncoo-dev/horm-logger/pull/8
+* Fix api by @domthomas-dev in https://github.com/ncoo-dev/horm-logger/pull/10
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.1.5...1.2.0
+
 ## 1.1.5 - 2025-02-02
 
 **Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.1.4...1.1.5
