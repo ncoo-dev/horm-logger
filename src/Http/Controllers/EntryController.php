@@ -23,7 +23,7 @@ class EntryController
         }
 
         $comparableEntry = $model::query()
-            ->offset(min($entriesCount - 1, 1000))
+            ->offset(min($entriesCount - 1, 500))
             ->where('created_at', '>=', $validated['start'])
             ->oldest()
             ->limit(1)
