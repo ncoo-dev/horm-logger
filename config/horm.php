@@ -13,5 +13,6 @@ return [
         'enabled' => env('HORM_ENDPOINT_ENABLED', true),
         'secret' => env('HORM_ENDPOINT_SECRET', 'my-little-secret-with-horm'),
         'url' => env('HORM_ENDPOINT_URL', 'horm-logger-get-entries'),
+        'max_entries' => env('HORM_ENDPOINT_MAX_ENTRIES', 100),
     ],
 ];
