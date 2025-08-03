@@ -2,6 +2,14 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.2.3 - 2025-08-02
+
+### What's Changed
+
+* chore(deps): bump aglipanci/laravel-pint-action from 2.5 to 2.6 by @dependabot[bot] in https://github.com/ncoo-dev/horm-logger/pull/11
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.2.1...1.2.3
+
 ## 1.2.2 - 2025-08-02
 
 ### What's Changed
