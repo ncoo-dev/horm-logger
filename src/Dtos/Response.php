@@ -9,6 +9,7 @@ class Response
     public function __construct(
         public array $headers,
         public int $status,
+        public ?string $body,
         public ?float $times,
     ) {}
 
@@ -17,6 +18,7 @@ class Response
         return new self(
             headers: $response->headers(),
             status: $response->status(),
+            body: $response->body(),
             times: $response->transferStats?->getTransferTime(),
         );
     }
@@ -26,6 +28,7 @@ class Response
         return new self(
             headers: $response->headers->all(),
             status: $response->status(),
+            body: $response->getContent(),
             times: $times,
         );
 
@@ -39,6 +42,7 @@ class Response
             return new self(
                 headers: $info['headers'],
                 status: $info['status'],
+                body: $info['body'] ?? null,
                 times: $info['times'],
             );
         }
@@ -52,6 +56,7 @@ class Response
         return [
             'headers' => $this->headers,
             'status' => $this->status,
+            'body' => $this->body,
             'times' => $this->times,
         ];
     }
