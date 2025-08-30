@@ -54,4 +54,9 @@ class Entry extends Model
 
         return static::where('created_at', '<=', now()->subDays($days));
     }
+
+    public function freshTimestamp()
+    {
+        return now()->setTimezone('UTC');
+    }
 }
