@@ -8,28 +8,40 @@ class Request
         public array $headers,
         public string $method,
         public string $url,
-        public ?string $body,
+        public mixed $body,
     ) {}
 
     public static function fromHttpClientRequest(\Illuminate\Http\Client\Request $request): self
     {
+        $body = $request->body();
+        if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
+            $body = $decoded;
+        }
+
         return new self(
             headers: $request->headers(),
             method: $request->method(),
             url: $request->url(),
-            body: $request->body(),
+            body: $body,
         );
     }
 
     public static function fromHttpRequest(\Illuminate\Http\Request $request): self
     {
+        $body = $request->all();
+        if (empty($body)) {
+            $body = $request->getContent();
+            if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
+                $body = $decoded;
+            }
+        }
+
         return new self(
             headers: $request->headers->all(),
             method: $request->method(),
             url: $request->url(),
-            body: $request->getContent(),
+            body: $body,
         );
-
     }
 
     public static function fromDB(string $request): self
