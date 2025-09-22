@@ -198,6 +198,7 @@ describe('HORM Logger Full Integration', function () {
             // Test valid request
             $validResponse = getJson('/horm-integration-api?'.http_build_query([
                 'start' => now()->subDay()->toDateTimeString(),
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'integration-test-secret',
             ]);
@@ -234,6 +235,7 @@ describe('HORM Logger Full Integration', function () {
             // Test date filtering - using 'start' parameter only (as controller only uses this)
             $filteredResponse = getJson('/horm-integration-api?'.http_build_query([
                 'start' => now()->subDay()->startOfDay()->toDateTimeString(),
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'integration-test-secret',
             ]);

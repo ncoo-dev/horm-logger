@@ -91,6 +91,7 @@ describe('HORM Logger API Endpoint', function () {
 
             $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => $currentTime,
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
@@ -138,6 +139,7 @@ describe('HORM Logger API Endpoint', function () {
 
             $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->subMinutes(5)->toDateTimeString(),
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
@@ -159,6 +161,7 @@ describe('HORM Logger API Endpoint', function () {
 
             $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->addMinutes(10)->toDateTimeString(),
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
@@ -170,29 +173,100 @@ describe('HORM Logger API Endpoint', function () {
         it('limits results to maximum entries per request', function () {
             testTime()->freeze('2024-01-01 00:00:00');
 
-            // Create more entries than the limit (100 is the default max_entries)
-            Entry::factory(150)->create([
-                'created_at' => now()->addMinutes(1),
-            ]);
+            // Create entries with different timestamps to ensure proper limiting
+            for ($i = 1; $i <= 150; $i++) {
+                Entry::factory()->create([
+                    'created_at' => now()->addMinutes($i),
+                ]);
+            }
+
             $last = Entry::factory()->create([
                 'created_at' => now()->addDays(1),
             ]);
 
             $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => now()->toDateTimeString(),
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
 
-            $response->assertSuccessful()
-                ->assertJson(function (AssertableJson $json) {
-                    $json->has('data', 100); // Should be limited to 100 entries which is the default max_entries
-                })
-                ->assertJsonMissing([
-                    'data' => [
-                        ['id' => $last->id],
-                    ],
+            $response->assertSuccessful();
+
+            $data = $response->json('data');
+            // Should get exactly 100 entries (up to the 100th entry's timestamp)
+            expect(count($data))->toBe(100)
+                ->and($response->json())->not->toContain(['id' => $last->id]);
+        });
+
+        it('respects custom limit parameter', function () {
+            testTime()->freeze('2024-01-01 00:00:00');
+
+            // Create entries with different timestamps
+            for ($i = 1; $i <= 50; $i++) {
+                Entry::factory()->create([
+                    'created_at' => now()->addMinutes($i),
                 ]);
+            }
+
+            // Test with limit of 10
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
+                'start' => now()->toDateTimeString(),
+                'limit' => 10,
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertSuccessful();
+
+            $data = $response->json('data');
+            // Should get exactly 10 entries (up to the 10th entry's timestamp)
+            expect(count($data))->toBe(10);
+        });
+
+        it('includes all entries with same timestamp at the limit boundary', function () {
+            testTime()->freeze('2024-01-01 00:00:00');
+
+            // Create 5 entries with different timestamps
+            for ($i = 1; $i <= 5; $i++) {
+                Entry::factory()->create([
+                    'created_at' => now()->addMinutes($i),
+                ]);
+            }
+
+            // Create 5 more entries with the same timestamp as the 5th entry
+            for ($i = 1; $i <= 5; $i++) {
+                Entry::factory()->create([
+                    'created_at' => now()->addMinutes(5),
+                ]);
+            }
+
+            // Create more entries after
+            for ($i = 6; $i <= 10; $i++) {
+                Entry::factory()->create([
+                    'created_at' => now()->addMinutes($i),
+                ]);
+            }
+
+            // Test with limit of 5
+            $response = getJson('/horm-api-endpoint?'.http_build_query([
+                'start' => now()->toDateTimeString(),
+                'limit' => 5,
+            ]), [
+                'horm-check-secret' => 'test-secret-key',
+            ]);
+
+            $response->assertSuccessful();
+
+            $data = $response->json('data');
+            // Should get 10 entries total (5 different timestamps + 5 with same timestamp at boundary)
+            expect(count($data))->toBe(10);
+
+            // Verify all entries are from the correct time range
+            foreach ($data as $entry) {
+                $createdAt = \Carbon\Carbon::parse($entry['created_at']);
+                expect($createdAt->lessThanOrEqualTo(now()->addMinutes(5)))->toBeTrue();
+            }
         });
     });
 
@@ -225,6 +299,7 @@ describe('HORM Logger API Endpoint', function () {
         it('handles invalid date formats gracefully', function () {
             $response = getJson('/horm-api-endpoint?'.http_build_query([
                 'start' => 'invalid-date-format',
+                'limit' => 100,
             ]), [
                 'horm-check-secret' => 'test-secret-key',
             ]);
