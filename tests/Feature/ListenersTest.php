@@ -136,8 +136,9 @@ describe('HORM Logger Event Listeners', function () {
             );
 
             $responseDto = new \NcooDev\HormLogger\Dtos\Response(
-                status: 200,
                 headers: ['Content-Type' => 'application/json'],
+                status: 200,
+                body: json_encode(['result' => 'success']),
                 times: 0.25
             );
 

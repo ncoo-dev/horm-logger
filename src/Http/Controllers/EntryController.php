@@ -15,25 +15,12 @@ class EntryController
 
         $model = config('horm.model.entry');
 
-        $entriesCount = $model::query()
-            ->where('created_at', '>=', $validated['start'])
-            ->count();
-        if ($entriesCount == 0) {
-            return EntryResource::collection([]);
-        }
-
-        $comparableEntry = $model::query()
-            ->offset(min($entriesCount - 1, config('horm.endpoint.max_entries')))
+        $entries = $model::query()
             ->where('created_at', '>=', $validated['start'])
             ->oldest()
-            ->limit(1)
-            ->first();
+            ->limit(config('horm.endpoint.max_entries', 100))
+            ->get();
 
-        return EntryResource::collection($model::query()
-            ->where('created_at', '>=', $validated['start'])
-            ->where('created_at', '<=', $comparableEntry->created_at)
-            ->oldest()
-            ->get()
-        );
+        return EntryResource::collection($entries);
     }
 }

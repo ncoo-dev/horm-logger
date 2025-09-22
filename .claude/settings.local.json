@@ -3,7 +3,8 @@
     "allow": [
       "Bash(vendor/bin/pest:*)",
       "Bash(vendor/bin/pint:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(composer update:*)"
     ],
     "deny": [],
     "ask": []

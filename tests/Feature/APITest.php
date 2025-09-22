@@ -170,12 +170,12 @@ describe('HORM Logger API Endpoint', function () {
         it('limits results to maximum entries per request', function () {
             testTime()->freeze('2024-01-01 00:00:00');
 
-            // Create more entries than the limit
-            Entry::factory(1500)->create([
+            // Create more entries than the limit (100 is the default max_entries)
+            Entry::factory(150)->create([
                 'created_at' => now()->addMinutes(1),
             ]);
             $last = Entry::factory()->create([
-                'created_at' => now()->addMinutes(2),
+                'created_at' => now()->addDays(1),
             ]);
 
             $response = getJson('/horm-api-endpoint?'.http_build_query([
@@ -186,7 +186,7 @@ describe('HORM Logger API Endpoint', function () {
 
             $response->assertSuccessful()
                 ->assertJson(function (AssertableJson $json) {
-                    $json->has('data', 1500); // Should be limited to 1500 entries which is the max temporary limit
+                    $json->has('data', 100); // Should be limited to 100 entries which is the default max_entries
                 })
                 ->assertJsonMissing([
                     'data' => [

@@ -70,21 +70,6 @@ class DataObfuscator
         return self::matchesUrlPatterns($url, $excludedUrls, 'outgoing');
     }
 
-    /**
-     * @deprecated Use shouldExcludeIncomingUrl() or shouldExcludeOutgoingUrl() instead
-     */
-    public static function shouldExcludeUrl(string $url): bool
-    {
-        // Fallback to old behavior for backward compatibility
-        $excludedUrls = config('horm.excluded_urls', []);
-        if (! empty($excludedUrls)) {
-            return self::matchesUrlPatterns($url, $excludedUrls, 'legacy');
-        }
-
-        // Default to incoming behavior
-        return self::shouldExcludeIncomingUrl($url);
-    }
-
     protected static function matchesUrlPatterns(string $url, array $excludedUrls, string $type): bool
     {
         if (empty($excludedUrls)) {
