@@ -30,7 +30,7 @@ describe('HORM Logger DTOs', function () {
                 ->and($requestDto->method)->toBe('POST')
                 ->and($requestDto->url)->toBe('https://example.com/api')
                 ->and($requestDto->headers)->toBeArray()
-                ->and($requestDto->body)->toBe('{"data":"test"}');
+                ->and($requestDto->body)->toBe(['data' => 'test']);
         });
 
         it('creates Request DTO from Laravel HTTP request', function () {
@@ -46,7 +46,7 @@ describe('HORM Logger DTOs', function () {
                 ->and($requestDto->method)->toBe('GET')
                 ->and($requestDto->url)->toBe('http://localhost/api/test')
                 ->and($requestDto->headers)->toBeArray()
-                ->and($requestDto->body)->toBeString();
+                ->and($requestDto->body)->toBeArray();
         });
 
         it('serializes and deserializes Request DTO correctly', function () {
@@ -116,8 +116,9 @@ describe('HORM Logger DTOs', function () {
 
         it('serializes and deserializes Response DTO correctly', function () {
             $originalResponse = new ResponseDto(
-                status: 200,
                 headers: ['Content-Type' => 'application/json'],
+                status: 200,
+                body: json_encode(['data' => 'test']),
                 times: 1.25
             );
 
@@ -181,8 +182,9 @@ describe('HORM Logger DTOs', function () {
                     body: null
                 ))),
                 'response' => base64_encode(serialize(new ResponseDto(
-                    status: 200,
                     headers: ['Content-Type' => 'application/json'],
+                    status: 200,
+                    body: '{"result": "success"}',
                     times: 0.5
                 ))),
                 'content' => base64_encode(serialize('{"result": "success"}')),

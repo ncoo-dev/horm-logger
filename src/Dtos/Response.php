@@ -9,29 +9,38 @@ class Response
     public function __construct(
         public array $headers,
         public int $status,
-        public ?string $body,
+        public mixed $body,
         public ?float $times,
     ) {}
 
     public static function fromHttpClientResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response): self
     {
+        $body = $response->body();
+        if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
+            $body = $decoded;
+        }
+
         return new self(
             headers: $response->headers(),
             status: $response->status(),
-            body: $response->body(),
+            body: $body,
             times: $response->transferStats?->getTransferTime(),
         );
     }
 
     public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?float $times = null): self
     {
+        $body = $response->getContent();
+        if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
+            $body = $decoded;
+        }
+
         return new self(
             headers: $response->headers->all(),
             status: $response->status(),
-            body: $response->getContent(),
+            body: $body,
             times: $times,
         );
-
     }
 
     public static function fromDB(string $reponse): self
@@ -43,7 +52,7 @@ class Response
                 headers: $info['headers'],
                 status: $info['status'],
                 body: $info['body'] ?? null,
-                times: $info['times'],
+                times: $info['times'] ?? null,
             );
         }
 

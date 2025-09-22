@@ -162,7 +162,7 @@ describe('HORM Logger Full Integration', function () {
             expect($requestDto->method)->toBe('POST')
                 ->and($requestDto->url)->toContain('/api/data')
                 ->and($requestDto->headers)->toHaveKey('authorization')
-                ->and($requestDto->body)->toContain('user_id');
+                ->and($requestDto->body)->toHaveKey('user_id');
 
             // Verify response capture
             $responseDto = \NcooDev\HormLogger\Dtos\Response::fromDB($entry->response);
