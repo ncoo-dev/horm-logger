@@ -29,9 +29,6 @@ class HormLogResponse
         (HormLoggerServiceProvider::determineEntryModel())::create([
             'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response->response),
             'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
-            'url' => $response->request->url(),
-            'status_code' => $response->response->status(),
-            'method' => $response->request->method(),
             'request' => $requestData,
             'response' => $responseData,
         ]);
