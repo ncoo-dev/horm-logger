@@ -3,7 +3,6 @@
 namespace NcooDev\HormLogger\Listeners;
 
 use Illuminate\Http\Client\Events\ResponseReceived;
-use Illuminate\Support\Arr;
 use NcooDev\HormLogger\Dtos\Request;
 use NcooDev\HormLogger\Dtos\Response;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
