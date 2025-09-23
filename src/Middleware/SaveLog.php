@@ -24,9 +24,8 @@ class SaveLog
             return $response;
         }
 
-        $theRequest = Request::fromHttpRequest($request);
-        $requestData = DataObfuscator::obfuscate($theRequest->toArray());
-        $responseData = DataObfuscator::obfuscate(Response::fromHttpResponse($response, times: $time)->toArray());
+        $requestData = collect(DataObfuscator::obfuscate(Request::fromHttpRequest($request)->toArray()))->toJson();
+        $responseData = collect(DataObfuscator::obfuscate(Response::fromHttpResponse($response, times: $time)->toArray()))->toJson();
 
         $log = [
             'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response),
