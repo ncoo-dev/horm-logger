@@ -14,33 +14,30 @@ class EntryFactory extends Factory
 
     public function definition(): array
     {
+        $method = fake()->randomElement(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']);
+        $url = fake()->url;
+        $statusCode = fake()->randomElement([200, 201, 204, 400, 401, 403, 404, 500]);
+
         return [
             'direction' => fake()->randomElement(Direction::cases()),
-            'url' => fake()->url,
             'type' => fake()->randomElement(EntryType::cases()),
-            'method' => fake()->randomElement(Method::cases()),
-            'request' => base64_encode(serialize([
+            'request' => json_encode([
                 'headers' => [
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
-                'method' => 'GET',
-                'url' => fake()->url,
+                'method' => $method,
+                'url' => $url,
                 'body' => fake()->sentence,
-            ])),
-            'response' => base64_encode(serialize([
+            ]),
+            'response' => json_encode([
                 'headers' => [
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
-                'status' => 200,
+                'status' => $statusCode,
                 'body' => fake()->sentence,
-            ])),
-            'content' => base64_encode(serialize([
-                'message' => fake()->sentence,
-                'context' => fake()->sentence,
-            ])),
-            'status_code' => 200,
+            ]),
             'created_at' => now(),
             'updated_at' => now(),
         ];

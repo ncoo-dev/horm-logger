@@ -43,21 +43,30 @@ class Response
         );
     }
 
-    public static function fromDB(string $reponse): self
+    public static function fromDB($response): self
     {
-        $info = unserialize(base64_decode($reponse));
+        // Handle both JSON string and array
+        if (is_string($response)) {
+            $info = json_decode($response, true);
+        } else {
+            $info = $response;
+        }
 
-        if (is_array($info)) {
+        if (is_null($info)) {
             return new self(
-                headers: $info['headers'],
-                status: $info['status'],
-                body: $info['body'] ?? null,
-                times: $info['times'] ?? null,
+                headers: [],
+                status: 0,
+                body: null,
+                times: null,
             );
         }
 
-        // If it's already an object instance, return it
-        return $info;
+        return new self(
+            headers: $info['headers'] ?? [],
+            status: $info['status'] ?? 0,
+            body: $info['body'] ?? null,
+            times: $info['times'] ?? null,
+        );
     }
 
     public function toArray(): array

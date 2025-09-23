@@ -30,9 +30,6 @@ class SaveLog
         $log = [
             'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response),
             'direction' => \NcooDev\HormLogger\Enums\Direction::INCOMING,
-            'url' => $request->url(),
-            'status_code' => $response->status(),
-            'method' => $request->method(),
             'request' => $requestData,
             'response' => $responseData,
         ];

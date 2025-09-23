@@ -15,13 +15,14 @@
 - **✅ Données Complètes** : Headers, payload, temps de réponse, codes de statut
 
 ### Données Capturées
-- 🌐 **URL et méthodes HTTP** (GET, POST, PUT, PATCH, DELETE)
-- 📊 **Codes de statut HTTP** avec classification automatique
-- ⏱️ **Temps de réponse** et métriques de performance
 - 📦 **Headers complets** (requête et réponse)
-- 💾 **Contenu intégral** des requêtes et réponses
+- 💾 **Contenu intégral** des requêtes et réponses stocké en JSON
 - 🕒 **Timestamps précis** pour chaque transaction
 - 🔄 **Direction** : distinction entrante/sortante
+- 🏷️ **Type de requête** : classification automatique (response, request_failed, connection_failed)
+- ⏱️ **Temps de réponse** et métriques de performance
+
+Note: Les URL, méthodes HTTP et codes de statut sont extraits directement des données JSON de request/response pour éviter la redondance.
 
 ## 🚀 Installation
 
@@ -181,17 +182,15 @@ Headers: horm-check-secret: votre-secret-securise
 CREATE TABLE horm_entries (
     id VARCHAR(36) PRIMARY KEY,
     direction ENUM('incoming', 'outgoing'),
-    url TEXT,
     type ENUM('response', 'connection_failed', 'request_failed'),
-    method VARCHAR(10),
-    request TEXT,      -- Données de requête (base64)
-    response TEXT,     -- Données de réponse (base64)
-    status_code INT,
-    content TEXT,      -- Contenu de réponse (base64)
+    request LONGTEXT,   -- Données de requête en JSON
+    response LONGTEXT,  -- Données de réponse en JSON
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
 ```
+
+Note: Les données sont stockées en JSON non-sérialisé. Les informations comme l'URL, la méthode et le code de statut sont directement accessibles dans les champs JSON request et response.
 
 ### Format des Données Exportées
 
@@ -201,13 +200,18 @@ CREATE TABLE horm_entries (
         {
             "id": "uuid",
             "direction": "outgoing",
-            "url": "https://api.example.com/users",
             "type": "response",
-            "method": "GET",
-            "status_code": 200,
-            "request": "eyJoZWFkZXJzIjp7fSwibWV0aG9kIjoiR0VUIn0=",
-            "response": "eyJoZWFkZXJzIjp7fSwiYm9keSI6IntcInVzZXJzXCI6W119In0=",
-            "content": "eyJ1c2VycyI6W119",
+            "request": {
+                "headers": {"Accept": "application/json"},
+                "method": "GET",
+                "url": "https://api.example.com/users",
+                "body": null
+            },
+            "response": {
+                "headers": {"Content-Type": "application/json"},
+                "status": 200,
+                "body": {"users": []}
+            },
             "created_at": "2024-01-01T10:00:00Z"
         }
     ]
@@ -224,7 +228,7 @@ CREATE TABLE horm_entries (
 ### Performance
 - **Impact Minimal** : Event listeners non-bloquants pour les requêtes sortantes
 - **Middleware** : Léger impact sur les requêtes entrantes
-- **Stockage** : Prévoyez l'espace disque nécessaire (données base64)
+- **Stockage** : Prévoyez l'espace disque nécessaire (données JSON)
 
 ### Conformité
 - **RGPD** : Attention aux données personnelles capturées

@@ -15,18 +15,53 @@ use NcooDev\HormLogger\Exceptions\InvalidConfiguration;
 
 class Entry extends Model
 {
-    protected $guarded = [];
-
     use HasFactory;
     use HasUuids;
     use MassPrunable;
 
+    protected $fillable = [
+        'direction',
+        'type',
+        'request',
+        'response',
+    ];
+
     protected $casts = [
         'type' => EntryType::class,
-        'method' => Method::class,
-        'body' => 'array',
         'direction' => Direction::class,
     ];
+
+    /**
+     * Get the request attribute as array.
+     */
+    public function getRequestAttribute($value): ?array
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        return json_decode($value, true);
+    }
+
+    /**
+     * Get the response attribute as array.
+     */
+    public function getResponseAttribute($value): ?array
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        return json_decode($value, true);
+    }
 
     public function getConnectionName(): string
     {

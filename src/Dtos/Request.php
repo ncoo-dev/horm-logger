@@ -44,24 +44,29 @@ class Request
         );
     }
 
-    public static function fromDB(string $request): self
+    public static function fromDB($request): self
     {
-        $info = unserialize(base64_decode($request));
-        if (is_array($info)) {
+        // Handle both JSON string and array
+        if (is_string($request)) {
+            $info = json_decode($request, true);
+        } else {
+            $info = $request;
+        }
+
+        if (is_null($info)) {
             return new self(
-                headers: $info['headers'],
-                method: $info['method'],
-                url: $info['url'],
-                body: $info['body'],
+                headers: [],
+                method: '',
+                url: '',
+                body: null,
             );
         }
 
-        // If it's an object, access properties directly
         return new self(
-            headers: $info->headers,
-            method: $info->method,
-            url: $info->url,
-            body: $info->body,
+            headers: $info['headers'] ?? [],
+            method: $info['method'] ?? '',
+            url: $info['url'] ?? '',
+            body: $info['body'] ?? null,
         );
     }
 

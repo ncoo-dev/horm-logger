@@ -13,16 +13,10 @@ return new class extends Migration
         Schema::connection(config('horm.database.connection'))->create(config('horm.database.table_name'), function (Blueprint $table) {
             $table->uuid('id');
             $table->string('direction')->default('outgoing');
-            $table->string('url')->nullable();
             $table->string('type')->default('response');
-            $table->string('method');
             $table->longText('request')->nullable();
             $table->longText('response')->nullable();
-            $table->integer('status_code')->nullable();
             $table->timestamps();
-            $table->index('url');
-            $table->index('method');
-            $table->index('status_code');
             $table->index('type');
 
         });

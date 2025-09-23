@@ -18,9 +18,8 @@ describe('Entry Model', function () {
                 ->and($entry->id)->toBeString()
                 ->and($entry->direction)->toBeInstanceOf(Direction::class)
                 ->and($entry->type)->toBeInstanceOf(EntryType::class)
-                ->and($entry->url)->toBeString()
-                ->and($entry->method)->not->toBeNull()
-                ->and($entry->status_code)->toBeInt()
+                ->and($entry->request)->not->toBeNull()
+                ->and($entry->response)->not->toBeNull()
                 ->and($entry->created_at)->toBeInstanceOf(Carbon::class)
                 ->and($entry->updated_at)->toBeInstanceOf(Carbon::class);
         });
@@ -29,14 +28,10 @@ describe('Entry Model', function () {
             $entry = Entry::factory()->create([
                 'direction' => Direction::INCOMING,
                 'type' => EntryType::RESPONSE,
-                'url' => 'https://example.com/api',
-                'status_code' => 200,
             ]);
 
             expect($entry->direction)->toBe(Direction::INCOMING)
-                ->and($entry->type)->toBe(EntryType::RESPONSE)
-                ->and($entry->url)->toBe('https://example.com/api')
-                ->and($entry->status_code)->toBe(200);
+                ->and($entry->type)->toBe(EntryType::RESPONSE);
         });
 
         it('can create multiple entries in sequence', function () {
@@ -76,39 +71,33 @@ describe('Entry Model', function () {
             expect($entry->response)->toBeNull();
         });
 
-        it('stores serialized data in request field', function () {
+        it('stores JSON data in request field', function () {
             $testData = ['method' => 'GET', 'headers' => ['Content-Type' => 'application/json']];
-            $serialized = base64_encode(serialize($testData));
+            $json = json_encode($testData);
 
-            $entry = Entry::factory()->create(['request' => $serialized]);
+            $entry = Entry::factory()->create(['request' => $json]);
 
-            expect($entry->request)->toBe($serialized);
-            expect(unserialize(base64_decode($entry->request)))->toBe($testData);
+            expect($entry->request)->toBe($testData);
         });
     });
 
     describe('Database Interactions', function () {
         it('can be saved and retrieved from database', function () {
-            $originalEntry = Entry::factory()->create([
-                'url' => 'https://test.example.com/unique-endpoint',
-                'status_code' => 201,
-            ]);
+            $originalEntry = Entry::factory()->create();
 
             $retrievedEntry = Entry::find($originalEntry->id);
 
             expect($retrievedEntry)
                 ->not->toBeNull()
-                ->and($retrievedEntry->url)->toBe('https://test.example.com/unique-endpoint')
-                ->and($retrievedEntry->status_code)->toBe(201)
                 ->and($retrievedEntry->id)->toBe($originalEntry->id);
         });
 
         it('can be updated', function () {
-            $entry = Entry::factory()->create(['status_code' => 200]);
+            $entry = Entry::factory()->create(['type' => EntryType::RESPONSE]);
 
-            $entry->update(['status_code' => 404]);
+            $entry->update(['type' => EntryType::REQUEST_FAILED]);
 
-            expect($entry->fresh()->status_code)->toBe(404);
+            expect($entry->fresh()->type)->toBe(EntryType::REQUEST_FAILED);
         });
 
         it('can be deleted', function () {
@@ -184,20 +173,14 @@ describe('Entry Model', function () {
             $data = [
                 'direction' => Direction::INCOMING,
                 'type' => EntryType::RESPONSE,
-                'url' => 'https://example.com',
-                'method' => 'GET',
-                'status_code' => 200,
-                'request' => base64_encode(serialize(['test' => 'data'])),
-                'response' => base64_encode(serialize(['result' => 'success'])),
-                'content' => base64_encode(serialize('response content')),
+                'request' => json_encode(['test' => 'data']),
+                'response' => json_encode(['result' => 'success']),
             ];
 
             $entry = Entry::create($data);
 
             expect($entry->direction)->toBe(Direction::INCOMING)
-                ->and($entry->type)->toBe(EntryType::RESPONSE)
-                ->and($entry->url)->toBe('https://example.com')
-                ->and($entry->status_code)->toBe(200);
+                ->and($entry->type)->toBe(EntryType::RESPONSE);
         });
     });
 
@@ -224,32 +207,12 @@ describe('Entry Model', function () {
     });
 
     describe('Validation and Data Integrity', function () {
-        it('handles long URLs correctly', function () {
-            $longUrl = 'https://example.com/'.str_repeat('very-long-path-segment/', 100);
+        it('handles empty and null response gracefully', function () {
+            $entryWithNull = Entry::factory()->create(['response' => null]);
+            $entryWithEmpty = Entry::factory()->create(['response' => json_encode([])]);
 
-            $entry = Entry::factory()->create(['url' => $longUrl]);
-
-            expect($entry->url)->toBe($longUrl)
-                ->and(strlen($entry->url))->toBeGreaterThan(1000);
-        });
-
-        it('handles various status codes', function () {
-            $statusCodes = [200, 201, 400, 401, 404, 500, 503];
-
-            foreach ($statusCodes as $code) {
-                $entry = Entry::factory()->create(['status_code' => $code]);
-                expect($entry->status_code)->toBe($code);
-            }
-
-            expect(Entry::all())->toHaveCount(count($statusCodes));
-        });
-
-        it('handles empty and null content gracefully', function () {
-            $entryWithNull = Entry::factory()->create(['content' => null]);
-            $entryWithEmpty = Entry::factory()->create(['content' => base64_encode(serialize(''))]);
-
-            expect($entryWithNull->content)->toBeNull();
-            expect(unserialize(base64_decode($entryWithEmpty->content)))->toBe('');
+            expect($entryWithNull->response)->toBeNull();
+            expect($entryWithEmpty->response)->toBe([]);
         });
     });
 

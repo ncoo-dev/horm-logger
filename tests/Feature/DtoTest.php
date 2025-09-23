@@ -57,7 +57,7 @@ describe('HORM Logger DTOs', function () {
                 body: '{"test": "data"}'
             );
 
-            $serialized = base64_encode(serialize($originalRequest));
+            $serialized = json_encode($originalRequest->toArray());
             $deserialized = RequestDto::fromDB($serialized);
 
             expect($deserialized)
@@ -122,7 +122,7 @@ describe('HORM Logger DTOs', function () {
                 times: 1.25
             );
 
-            $serialized = base64_encode(serialize($originalResponse));
+            $serialized = json_encode($originalResponse->toArray());
             $deserialized = ResponseDto::fromDB($serialized);
 
             expect($deserialized)
@@ -169,25 +169,25 @@ describe('HORM Logger DTOs', function () {
     describe('Integration with Entry Model', function () {
         it('stores and retrieves DTOs through Entry model', function () {
             // Create a test entry manually to avoid HTTP client issues
+            $requestDto = new RequestDto(
+                method: 'GET',
+                url: 'https://api.test.com/endpoint',
+                headers: ['Content-Type' => 'application/json'],
+                body: null
+            );
+
+            $responseDto = new ResponseDto(
+                headers: ['Content-Type' => 'application/json'],
+                status: 200,
+                body: '{"result": "success"}',
+                times: 0.5
+            );
+
             $entry = Entry::create([
                 'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
                 'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
-                'url' => 'https://api.test.com/endpoint',
-                'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                'status_code' => 200,
-                'request' => base64_encode(serialize(new RequestDto(
-                    method: 'GET',
-                    url: 'https://api.test.com/endpoint',
-                    headers: ['Content-Type' => 'application/json'],
-                    body: null
-                ))),
-                'response' => base64_encode(serialize(new ResponseDto(
-                    headers: ['Content-Type' => 'application/json'],
-                    status: 200,
-                    body: '{"result": "success"}',
-                    times: 0.5
-                ))),
-                'content' => base64_encode(serialize('{"result": "success"}')),
+                'request' => json_encode($requestDto->toArray()),
+                'response' => json_encode($responseDto->toArray()),
             ]);
 
             $requestDto = RequestDto::fromDB($entry->request);

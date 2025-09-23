@@ -13,13 +13,9 @@ beforeEach(function () {
     Schema::connection('testing')->create('horm_entries', function ($table) {
         $table->uuid('id');
         $table->string('direction');
-        $table->string('url')->nullable();
         $table->string('type');
-        $table->string('method');
-        $table->text('request')->nullable();
-        $table->text('response')->nullable();
-        $table->integer('status_code')->nullable();
-        $table->text('content')->nullable();
+        $table->longText('request')->nullable();
+        $table->longText('response')->nullable();
         $table->timestamps();
     });
 
@@ -41,9 +37,9 @@ it('saves log when logger is enabled', function () {
     expect(Entry::count())->toBe(1);
 
     $entry = Entry::first();
-    expect($entry->url)->toContain('/test-endpoint');
-    expect($entry->method->value)->toBe('POST');
-    expect($entry->status_code)->toBe(200);
+    expect($entry->request['url'])->toContain('/test-endpoint');
+    expect($entry->request['method'])->toBe('POST');
+    expect($entry->response['status'])->toBe(200);
     expect($entry->direction->value)->toBe('incoming');
 });
 
@@ -80,7 +76,7 @@ it('obfuscates sensitive fields in requests', function () {
     ])->assertStatus(200);
 
     $entry = Entry::first();
-    $request = unserialize(base64_decode($entry->request));
+    $request = $entry->request;
 
     // Request body is stored as an array from the DTO
     $requestBody = $request['body'] ?? [];
@@ -99,8 +95,8 @@ it('obfuscates sensitive fields in responses', function () {
         ->assertStatus(200);
 
     $entry = Entry::first();
-    $response = unserialize(base64_decode($entry->response));
-    $content = json_decode(unserialize(base64_decode($entry->content)), true);
+    $response = $entry->response;
 
-    expect($content['token'])->toBe('abc123');
+    expect($response['body']['token'])->not->toBe('abc123');
+    expect($response['body']['token'])->toContain('*');
 });

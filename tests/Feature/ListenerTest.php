@@ -13,13 +13,9 @@ beforeEach(function () {
     Schema::connection('testing')->create('horm_entries', function ($table) {
         $table->uuid('id');
         $table->string('direction');
-        $table->string('url')->nullable();
         $table->string('type');
-        $table->string('method');
-        $table->text('request')->nullable();
-        $table->text('response')->nullable();
-        $table->integer('status_code')->nullable();
-        $table->text('content')->nullable();
+        $table->longText('request')->nullable();
+        $table->longText('response')->nullable();
         $table->timestamps();
     });
 
@@ -35,11 +31,11 @@ it('logs outgoing http requests when enabled', function () {
 
     Http::get('https://api.example.com/users');
 
-    $entry = Entry::where('url', 'https://api.example.com/users')->first();
+    $entry = Entry::first();
     expect($entry)->not->toBeNull();
-    expect($entry->url)->toBe('https://api.example.com/users');
-    expect($entry->method->value)->toBe('GET');
-    expect($entry->status_code)->toBe(200);
+    expect($entry->request['url'])->toBe('https://api.example.com/users');
+    expect($entry->request['method'])->toBe('GET');
+    expect($entry->response['status'])->toBe(200);
     expect($entry->direction->value)->toBe('outgoing');
 });
 
@@ -71,9 +67,13 @@ it('excludes outgoing urls matching patterns', function () {
     Http::get('https://api.example.com/internal/health');
     Http::get('https://api.example.com/users');
 
-    expect(Entry::where('url', 'https://example.com/webhook')->count())->toBe(0);
-    expect(Entry::where('url', 'https://api.example.com/internal/health')->count())->toBe(0);
-    expect(Entry::where('url', 'https://api.example.com/users')->count())->toBeGreaterThan(0);
+    $webhookEntry = Entry::where('request', 'like', '%https://example.com/webhook%')->count();
+    $healthEntry = Entry::where('request', 'like', '%https://api.example.com/internal/health%')->count();
+    $usersEntry = Entry::where('request', 'like', '%https://api.example.com/users%')->count();
+
+    expect($webhookEntry)->toBe(0);
+    expect($healthEntry)->toBe(0);
+    expect($usersEntry)->toBeGreaterThan(0);
 });
 
 it('excludes full URLs for outgoing requests', function () {
@@ -97,12 +97,12 @@ it('excludes full URLs for outgoing requests', function () {
     Http::get('https://api.allowed.com/users');
 
     // Verify excluded URLs are not logged
-    expect(Entry::where('url', 'https://api.payment.com/charge')->count())->toBe(0);
-    expect(Entry::where('url', 'https://api.payment.com/refund')->count())->toBe(0);
-    expect(Entry::where('url', 'https://webhook.site/12345')->count())->toBe(0);
+    expect(Entry::where('request', 'like', '%https://api.payment.com/charge%')->count())->toBe(0);
+    expect(Entry::where('request', 'like', '%https://api.payment.com/refund%')->count())->toBe(0);
+    expect(Entry::where('request', 'like', '%https://webhook.site/12345%')->count())->toBe(0);
 
     // Verify allowed URLs are logged (at least one entry)
-    expect(Entry::where('url', 'https://api.allowed.com/users')->count())->toBeGreaterThan(0);
+    expect(Entry::where('request', 'like', '%https://api.allowed.com/users%')->count())->toBeGreaterThan(0);
 });
 
 it('obfuscates sensitive data in requests', function () {
@@ -149,7 +149,7 @@ it('obfuscates sensitive data in responses', function () {
     Http::post('https://api.example.com/auth');
 
     $entry = Entry::first();
-    $responseData = unserialize(base64_decode($entry->response));
+    $responseData = $entry->response;
 
     // Response body is now stored as array directly when it's JSON
     $responseBody = $responseData['body'];
@@ -157,4 +157,6 @@ it('obfuscates sensitive data in responses', function () {
     expect($responseBody['user'])->toBe('john');
     expect($responseBody['token'])->not->toBe('bearer_abc123xyz');
     expect($responseBody['secret'])->not->toBe('topsecret');
+    expect($responseBody['token'])->toContain('*');
+    expect($responseBody['secret'])->toContain('*');
 });
