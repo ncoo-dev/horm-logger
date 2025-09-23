@@ -34,9 +34,8 @@ class SaveLog
             'url' => $request->url(),
             'status_code' => $response->status(),
             'method' => $request->method(),
-            'request' => base64_encode(serialize($requestData)),
-            'response' => base64_encode(serialize($responseData)),
-            'content' => base64_encode(serialize($response->getContent())),
+            'request' => $requestData,
+            'response' => $responseData,
         ];
         (HormLoggerServiceProvider::determineEntryModel())::create($log);
 

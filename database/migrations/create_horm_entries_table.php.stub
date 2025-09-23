@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up()
     {
+        Schema::connection(config('horm.database.connection'))->dropIfExists(config('horm.database.table_name'));
+
         Schema::connection(config('horm.database.connection'))->create(config('horm.database.table_name'), function (Blueprint $table) {
             $table->uuid('id');
             $table->string('direction')->default('outgoing');
             $table->string('url')->nullable();
             $table->string('type')->default('response');
             $table->string('method');
-            $table->text('request')->nullable();
-            $table->text('response')->nullable();
+            $table->longText('request')->nullable();
+            $table->longText('response')->nullable();
             $table->integer('status_code')->nullable();
-            $table->text('content')->nullable();
-
             $table->timestamps();
             $table->index('url');
             $table->index('method');

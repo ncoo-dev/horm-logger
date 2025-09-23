@@ -7,6 +7,7 @@ use NcooDev\HormLogger\Dtos\Request;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
+use NcooDev\HormLogger\Support\DataObfuscator;
 
 class HormLogConnectionFailed
 {
@@ -14,15 +15,17 @@ class HormLogConnectionFailed
 
     public function handle(ConnectionFailed $connectionFailed)
     {
+
+        $requestData = collect(DataObfuscator::obfuscate(Request::fromHttpClientRequest($connectionFailed->request)->toArray()))->toJson();
+
         (HormLoggerServiceProvider::determineEntryModel())::create([
             'type' => EntryType::CONNECTION_FAILED,
             'direction' => Direction::OUTGOING,
             'url' => $connectionFailed->request->url(),
             'status_code' => $connectionFailed->exception->getCode(),
             'method' => $connectionFailed->request->method(),
-            'request' => base64_encode(serialize(Request::fromHttpClientRequest($connectionFailed->request)->toArray())),
-            'response' => null,
-            'content' => base64_encode(serialize($connectionFailed->exception->getMessage())),
+            'request' => $requestData,
+            'response' => $connectionFailed->exception->getMessage().'\r\n'.$connectionFailed->exception->getTraceAsString(),
         ]);
     }
 }

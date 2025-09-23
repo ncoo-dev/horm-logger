@@ -13,7 +13,7 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'horm:install';
+    protected $signature = 'horm:install {--force : Overwrite any existing files}';
 
     /**
      * The console command description.
@@ -36,10 +36,10 @@ class InstallCommand extends Command
         $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-assets', '--force' => true]);
 
         $this->comment('Publishing Horm Configuration...');
-        $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-config', '--force' => true]);
+        $this->callSilent('vendor:publish', ['--tag' => 'horm-logger-config', '--force' => $this->option('force')]);
 
         $this->comment('Publishing Horm Migrations...');
-        $this->call('vendor:publish', ['--tag' => 'horm-logger-migrations']);
+        $this->call('vendor:publish', ['--tag' => 'horm-logger-migrations', '--force' => $this->option('force')]);
 
         $this->info('Horm installed successfully.');
     }

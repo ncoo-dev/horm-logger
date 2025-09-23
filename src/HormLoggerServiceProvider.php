@@ -26,7 +26,6 @@ class HormLoggerServiceProvider extends PackageServiceProvider
 
             ->hasMigrations([
                 'create_horm_entries_table',
-                'update_texte_horm_entries_table',
             ])
             ->hasCommand(\NcooDev\HormLogger\Console\InstallCommand::class)
             ->hasCommand(\NcooDev\HormLogger\Console\PruneCommand::class);

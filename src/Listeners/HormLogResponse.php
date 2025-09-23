@@ -3,6 +3,7 @@
 namespace NcooDev\HormLogger\Listeners;
 
 use Illuminate\Http\Client\Events\ResponseReceived;
+use Illuminate\Support\Arr;
 use NcooDev\HormLogger\Dtos\Request;
 use NcooDev\HormLogger\Dtos\Response;
 use NcooDev\HormLogger\HormLoggerServiceProvider;
@@ -22,8 +23,8 @@ class HormLogResponse
             return;
         }
 
-        $requestData = DataObfuscator::obfuscate(Request::fromHttpClientRequest($response->request)->toArray());
-        $responseData = DataObfuscator::obfuscate(Response::fromHttpClientResponse($response->response)->toArray());
+        $requestData = collect(DataObfuscator::obfuscate(Request::fromHttpClientRequest($response->request)->toArray()))->toJson();
+        $responseData = collect(DataObfuscator::obfuscate(Response::fromHttpClientResponse($response->response)->toArray()))->toJson();
 
         (HormLoggerServiceProvider::determineEntryModel())::create([
             'type' => \NcooDev\HormLogger\Enums\EntryType::byResponseStatut($response->response),
@@ -31,9 +32,8 @@ class HormLogResponse
             'url' => $response->request->url(),
             'status_code' => $response->response->status(),
             'method' => $response->request->method(),
-            'request' => base64_encode(serialize($requestData)),
-            'response' => base64_encode(serialize($responseData)),
-            'content' => base64_encode(serialize($response->response->body())),
+            'request' => $requestData,
+            'response' => $responseData,
         ]);
     }
 }
