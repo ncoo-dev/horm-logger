@@ -2,6 +2,10 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.4.1 - 2025-09-24
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.4.0...1.4.1
+
 ## 1.4.0 - 2025-09-23
 
 **Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.3.1...1.4.0
