@@ -392,7 +392,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify data integrity
             $entries = Entry::all();
-            $urls = $entries->map(fn($entry) => $entry->request['url'])->unique();
+            $urls = $entries->map(fn ($entry) => $entry->request['url'])->unique();
             expect($urls->count())->toBe(100); // All unique URLs were captured
 
             // Verify all entries have required fields
@@ -447,7 +447,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify all external API calls were captured
             $entries = Entry::all();
-            $hosts = $entries->map(fn($entry) => $entry->request['url'])->map(fn ($url) => parse_url($url, PHP_URL_HOST));
+            $hosts = $entries->map(fn ($entry) => $entry->request['url'])->map(fn ($url) => parse_url($url, PHP_URL_HOST));
 
             expect($hosts)->toContain('api.stripe.example.com')
                 ->toContain('api.sendgrid.example.com')
@@ -504,6 +504,7 @@ describe('HORM Logger Full Integration', function () {
             // Verify different status codes
             $statusCodes = $entries->map(function ($entry) {
                 $responseDto = \NcooDev\HormLogger\Dtos\Response::fromDB($entry->response);
+
                 return $responseDto->status;
             })->unique()->sort()->values();
             expect($statusCodes)->toContain(0)   // Connection failed

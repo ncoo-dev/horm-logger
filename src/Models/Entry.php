@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use NcooDev\HormLogger\Database\Factories\EntryFactory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
-use NcooDev\HormLogger\Enums\Method;
 use NcooDev\HormLogger\Exceptions\InvalidConfiguration;
 
 class Entry extends Model

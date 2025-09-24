@@ -385,7 +385,7 @@ describe('HORM Logger Middleware', function () {
             expect(Entry::all())->toHaveCount(2);
 
             $entries = Entry::all();
-            $urls = $entries->map(fn($entry) => $entry->request['url'])->toArray();
+            $urls = $entries->map(fn ($entry) => $entry->request['url'])->toArray();
             expect($urls)->toContain('http://localhost/group/endpoint1')
                 ->toContain('http://localhost/group/endpoint2');
         });

@@ -5,7 +5,6 @@ namespace NcooDev\HormLogger\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use NcooDev\HormLogger\Enums\Direction;
 use NcooDev\HormLogger\Enums\EntryType;
-use NcooDev\HormLogger\Enums\Method;
 use NcooDev\HormLogger\Models\Entry;
 
 class EntryFactory extends Factory
