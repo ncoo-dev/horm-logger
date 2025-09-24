@@ -34,12 +34,8 @@ describe('HORM Logger Event Listeners', function () {
             Entry::create([
                 'type' => EntryType::RESPONSE,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://success.example.com/api/data',
-                'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                'status_code' => 200,
-                'request' => base64_encode(serialize(['method' => 'GET', 'url' => 'http://success.example.com/api/data', 'headers' => ['Content-Type' => 'application/json'], 'body' => ''])),
-                'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
-                'content' => base64_encode(serialize('success response')),
+                'request' => ['method' => 'GET', 'url' => 'http://success.example.com/api/data', 'headers' => ['Content-Type' => 'application/json'], 'body' => ''],
+                'response' => ['status' => 200, 'headers' => ['Content-Type' => 'application/json'], 'body' => 'success response', 'times' => 0.1],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -51,12 +47,12 @@ describe('HORM Logger Event Listeners', function () {
                 ->toBeInstanceOf(config('horm.model.entry'))
                 ->and($entry->type)->toBe(EntryType::RESPONSE)
                 ->and($entry->direction)->toBe(Direction::OUTGOING)
-                ->and($entry->url)->toBe('http://success.example.com/api/data')
-                ->and($entry->status_code)->toBe(200)
-                ->and($entry->method->value)->toBe('GET')
+                ->and($entry->request['url'])->toBe('http://success.example.com/api/data')
+                ->and($entry->response['status'])->toBe(200)
+                ->and($entry->request['method'])->toBe('GET')
                 ->and($entry->request)->not->toBeNull()
                 ->and($entry->response)->not->toBeNull()
-                ->and($entry->content)->toBe(base64_encode(serialize('success response')));
+                ->and($entry->response['body'])->toBe('success response');
         });
 
         it('logs client error responses as REQUEST_FAILED', function () {
@@ -66,17 +62,13 @@ describe('HORM Logger Event Listeners', function () {
             Entry::create([
                 'type' => EntryType::REQUEST_FAILED,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://client-error.example.com/api/submit',
-                'method' => \NcooDev\HormLogger\Enums\Method::POST,
-                'status_code' => 400,
-                'request' => base64_encode(serialize([
+                'request' => [
                     'method' => 'POST',
                     'url' => 'http://client-error.example.com/api/submit',
                     'headers' => ['Content-Type' => 'application/json'],
                     'body' => json_encode(['data' => 'test']),
-                ])),
-                'response' => base64_encode(serialize(['status' => 400, 'headers' => [], 'times' => 0.1])),
-                'content' => base64_encode(serialize('client error')),
+                ],
+                'response' => ['status' => 400, 'headers' => ['Content-Type' => 'text/plain'], 'body' => 'client error', 'times' => 0.1],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -88,10 +80,10 @@ describe('HORM Logger Event Listeners', function () {
                 ->toBeInstanceOf(config('horm.model.entry'))
                 ->and($entry->type)->toBe(EntryType::REQUEST_FAILED)
                 ->and($entry->direction)->toBe(Direction::OUTGOING)
-                ->and($entry->url)->toBe('http://client-error.example.com/api/submit')
-                ->and($entry->status_code)->toBe(400)
-                ->and($entry->method->value)->toBe('POST')
-                ->and($entry->content)->toBe(base64_encode(serialize('client error')));
+                ->and($entry->request['url'])->toBe('http://client-error.example.com/api/submit')
+                ->and($entry->response['status'])->toBe(400)
+                ->and($entry->request['method'])->toBe('POST')
+                ->and($entry->response['body'])->toBe('client error');
         });
 
         it('logs server error responses as REQUEST_FAILED', function () {
@@ -101,17 +93,13 @@ describe('HORM Logger Event Listeners', function () {
             Entry::create([
                 'type' => EntryType::REQUEST_FAILED,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://server-error.example.com/api/broken',
-                'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                'status_code' => 500,
-                'request' => base64_encode(serialize([
+                'request' => [
                     'method' => 'GET',
                     'url' => 'http://server-error.example.com/api/broken',
                     'headers' => [],
                     'body' => '',
-                ])),
-                'response' => base64_encode(serialize(['status' => 500, 'headers' => [], 'times' => 0.1])),
-                'content' => base64_encode(serialize('server error')),
+                ],
+                'response' => ['status' => 500, 'headers' => ['Content-Type' => 'text/html'], 'body' => 'server error', 'times' => 0.1],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -123,7 +111,7 @@ describe('HORM Logger Event Listeners', function () {
                 ->toBeInstanceOf(config('horm.model.entry'))
                 ->and($entry->type)->toBe(EntryType::REQUEST_FAILED)
                 ->and($entry->direction)->toBe(Direction::OUTGOING)
-                ->and($entry->status_code)->toBe(500);
+                ->and($entry->response['status'])->toBe(500);
         });
 
         it('stores request and response DTOs correctly', function () {
@@ -148,8 +136,8 @@ describe('HORM Logger Event Listeners', function () {
                 'url' => 'http://success.example.com/api/endpoint',
                 'method' => \NcooDev\HormLogger\Enums\Method::POST,
                 'status_code' => 200,
-                'request' => base64_encode(serialize($requestDto)),
-                'response' => base64_encode(serialize($responseDto)),
+                'request' => $requestDto->toArray(),
+                'response' => $responseDto->toArray(),
                 'content' => base64_encode(serialize('success response')),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -182,17 +170,13 @@ describe('HORM Logger Event Listeners', function () {
             Entry::create([
                 'type' => EntryType::CONNECTION_FAILED,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://connection-failed.example.com/api',
-                'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                'status_code' => 0,
-                'request' => base64_encode(serialize([
+                'request' => [
                     'method' => 'GET',
                     'url' => 'http://connection-failed.example.com/api',
                     'headers' => [],
                     'body' => '',
-                ])),
-                'response' => null,
-                'content' => base64_encode(serialize('Connection timeout')),
+                ],
+                'response' => ['status' => 0, 'headers' => [], 'body' => 'Connection timeout', 'times' => null],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -204,12 +188,12 @@ describe('HORM Logger Event Listeners', function () {
                 ->toBeInstanceOf(config('horm.model.entry'))
                 ->and($entry->type)->toBe(EntryType::CONNECTION_FAILED)
                 ->and($entry->direction)->toBe(Direction::OUTGOING)
-                ->and($entry->url)->toBe('http://connection-failed.example.com/api')
-                ->and($entry->status_code)->toBe(0)
-                ->and($entry->method->value)->toBe('GET')
+                ->and($entry->request['url'])->toBe('http://connection-failed.example.com/api')
+                ->and($entry->response['status'])->toBe(0)
+                ->and($entry->request['method'])->toBe('GET')
                 ->and($entry->request)->not->toBeNull()
-                ->and($entry->response)->toBeNull()
-                ->and($entry->content)->toBe(base64_encode(serialize('Connection timeout')));
+                ->and($entry->response)->not->toBeNull()
+                ->and($entry->response['body'])->toBe('Connection timeout');
         });
 
         it('handles connection timeouts with different error messages', function () {
@@ -217,23 +201,19 @@ describe('HORM Logger Event Listeners', function () {
             Entry::create([
                 'type' => EntryType::CONNECTION_FAILED,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://timeout.example.com/slow-endpoint',
-                'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                'status_code' => 0,
-                'request' => base64_encode(serialize([
+                'request' => [
                     'method' => 'GET',
                     'url' => 'http://timeout.example.com/slow-endpoint',
                     'headers' => [],
                     'body' => '',
-                ])),
-                'response' => null,
-                'content' => base64_encode(serialize('Request timeout after 30 seconds')),
+                ],
+                'response' => ['status' => 0, 'headers' => [], 'body' => 'Request timeout after 30 seconds', 'times' => null],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
             $entry = Entry::first();
-            expect($entry->content)->toBe(base64_encode(serialize('Request timeout after 30 seconds')));
+            expect($entry->response['body'])->toBe('Request timeout after 30 seconds');
         });
     });
 
@@ -252,17 +232,13 @@ describe('HORM Logger Event Listeners', function () {
                 Entry::create([
                     'type' => EntryType::RESPONSE,
                     'direction' => Direction::OUTGOING,
-                    'url' => $testCase['url'],
-                    'method' => \NcooDev\HormLogger\Enums\Method::from($testCase['method']),
-                    'status_code' => 200,
-                    'request' => base64_encode(serialize([
+                    'request' => [
                         'method' => $testCase['method'],
                         'url' => $testCase['url'],
                         'headers' => [],
                         'body' => '',
-                    ])),
-                    'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
-                    'content' => base64_encode(serialize('success response')),
+                    ],
+                    'response' => ['status' => 200, 'headers' => [], 'body' => 'success response', 'times' => 0.1],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -272,8 +248,8 @@ describe('HORM Logger Event Listeners', function () {
             expect($entries)->toHaveCount(5);
 
             foreach ($entries as $index => $entry) {
-                expect($entry->method->value)->toBe($methods[$index]['method'])
-                    ->and($entry->url)->toBe($methods[$index]['url']);
+                expect($entry->request['method'])->toBe($methods[$index]['method'])
+                    ->and($entry->request['url'])->toBe($methods[$index]['url']);
             }
         });
     });
@@ -300,10 +276,10 @@ describe('HORM Logger Middleware', function () {
                 ->toBeInstanceOf(config('horm.model.entry'))
                 ->and($entry->type)->toBe(EntryType::RESPONSE)
                 ->and($entry->direction)->toBe(Direction::INCOMING)
-                ->and($entry->url)->toBe('http://localhost/api/test')
-                ->and($entry->status_code)->toBe(200)
-                ->and($entry->method->value)->toBe('GET')
-                ->and($entry->content)->toBe(base64_encode(serialize('success response')));
+                ->and($entry->request['url'])->toContain('/api/test')
+                ->and($entry->response['status'])->toBe(200)
+                ->and($entry->request['method'])->toBe('GET')
+                ->and($entry->response['body'])->toBe('success response');
         });
 
         it('logs incoming requests with error responses', function () {
@@ -322,8 +298,8 @@ describe('HORM Logger Middleware', function () {
             expect($entry)
                 ->and($entry->type)->toBe(EntryType::REQUEST_FAILED)
                 ->and($entry->direction)->toBe(Direction::INCOMING)
-                ->and($entry->status_code)->toBe(404)
-                ->and($entry->method->value)->toBe('POST');
+                ->and($entry->response['status'])->toBe(404)
+                ->and($entry->request['method'])->toBe('POST');
         });
 
         it('correctly stores request and response DTOs', function () {
@@ -378,8 +354,8 @@ describe('HORM Logger Middleware', function () {
             expect(Entry::all())->toHaveCount(1);
 
             $entry = Entry::first();
-            expect($entry->url)->toContain('/with-middleware')
-                ->and($entry->status_code)->toBe(200)
+            expect($entry->request['url'])->toContain('/with-middleware')
+                ->and($entry->response['status'])->toBe(200)
                 ->and($entry->direction)->toBe(Direction::INCOMING);
         });
 
@@ -392,8 +368,8 @@ describe('HORM Logger Middleware', function () {
             post('/api/json', ['data' => 'test'], ['Content-Type' => 'application/json']);
 
             $entry = Entry::first();
-            expect($entry->method->value)->toBe('POST')
-                ->and($entry->content)->not->toBeEmpty();
+            expect($entry->request['method'])->toBe('POST')
+                ->and($entry->response['body'])->not->toBeEmpty();
         });
 
         it('applies middleware to route groups correctly', function () {
@@ -408,7 +384,8 @@ describe('HORM Logger Middleware', function () {
 
             expect(Entry::all())->toHaveCount(2);
 
-            $urls = Entry::pluck('url')->toArray();
+            $entries = Entry::all();
+            $urls = $entries->map(fn($entry) => $entry->request['url'])->toArray();
             expect($urls)->toContain('http://localhost/group/endpoint1')
                 ->toContain('http://localhost/group/endpoint2');
         });

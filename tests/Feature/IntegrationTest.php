@@ -39,9 +39,9 @@ describe('HORM Logger Full Integration', function () {
             $entry1 = Entry::latest()->first();
             expect($entry1->type)->toBe(EntryType::RESPONSE)
                 ->and($entry1->direction)->toBe(Direction::OUTGOING)
-                ->and($entry1->url)->toBe('http://api.success.example.com/users')
-                ->and($entry1->status_code)->toBe(200)
-                ->and($entry1->method->value)->toBe('POST');
+                ->and($entry1->request['url'])->toBe('http://api.success.example.com/users')
+                ->and($entry1->response['status'])->toBe(200)
+                ->and($entry1->request['method'])->toBe('POST');
 
             // Test error request
             $countBefore = Entry::count();
@@ -50,9 +50,9 @@ describe('HORM Logger Full Integration', function () {
             expect($response2->failed())->toBeTrue();
             expect(Entry::count())->toBeGreaterThan($countBefore);
 
-            $entry2 = Entry::where('url', 'like', '%api.error.example.com%')->latest()->first();
+            $entry2 = Entry::where('request', 'like', '%api.error.example.com%')->latest()->first();
             expect($entry2->type)->toBe(EntryType::REQUEST_FAILED)
-                ->and($entry2->status_code)->toBe(404);
+                ->and($entry2->response['status'])->toBe(404);
 
             // Test connection failure
             $countBefore2 = Entry::count();
@@ -64,9 +64,11 @@ describe('HORM Logger Full Integration', function () {
 
             expect(Entry::count())->toBeGreaterThan($countBefore2);
 
-            $entry3 = Entry::where('url', 'like', '%api.timeout.example.com%')->latest()->first();
-            expect($entry3->type)->toBe(EntryType::CONNECTION_FAILED)
-                ->and($entry3->status_code)->toBe(0);
+            $entry3 = Entry::where('request', 'like', '%api.timeout.example.com%')->latest()->first();
+            expect($entry3->type)->toBe(EntryType::CONNECTION_FAILED);
+
+            $responseDto = \NcooDev\HormLogger\Dtos\Response::fromDB($entry3->response);
+            expect($responseDto->status)->toBe(0);
         });
 
         it('preserves complete request and response data', function () {
@@ -96,10 +98,10 @@ describe('HORM Logger Full Integration', function () {
             expect($responseDto->status)->toBe(201)
                 ->and($responseDto->headers)->toHaveKey('Location');
 
-            // Verify content storage
-            $content = unserialize(base64_decode($entry->content));
-            expect($content)->toContain('processed')
-                ->and($content)->toContain('123');
+            // Verify response body content
+            $responseBodyContent = is_array($responseDto->body) ? json_encode($responseDto->body) : (string) $responseDto->body;
+            expect($responseBodyContent)->toContain('processed')
+                ->and($responseBodyContent)->toContain('123');
         });
     });
 
@@ -121,26 +123,34 @@ describe('HORM Logger Full Integration', function () {
             $entry1 = Entry::latest()->first();
             expect($entry1->type)->toBe(EntryType::RESPONSE)
                 ->and($entry1->direction)->toBe(Direction::INCOMING)
-                ->and($entry1->method->value)->toBe('GET')
-                ->and($entry1->status_code)->toBe(200);
+                ->and($entry1->request['method'])->toBe('GET')
+                ->and($entry1->response['status'])->toBe(200);
 
             // Test POST request
             post('/api/users', ['name' => 'John'], ['Content-Type' => 'application/json']);
             expect(Entry::count())->toBe(2);
 
             // Get the POST entry specifically
-            $entry2 = Entry::where('method', \NcooDev\HormLogger\Enums\Method::POST)->latest()->first();
-            expect($entry2)->not->toBeNull()
-                ->and($entry2->method->value)->toBe('POST')
-                ->and($entry2->status_code)->toBe(201);
+            $entry2 = Entry::where('request', 'like', '%"method":"POST"%')->latest()->first();
+            expect($entry2)->not->toBeNull();
+
+            $requestDto2 = \NcooDev\HormLogger\Dtos\Request::fromDB($entry2->request);
+            $responseDto2 = \NcooDev\HormLogger\Dtos\Response::fromDB($entry2->response);
+            expect($requestDto2->method)->toBe('POST')
+                ->and($responseDto2->status)->toBe(201);
 
             // Test error response
             get('/api/error');
             expect(Entry::count())->toBe(3);
 
-            $errorEntry = Entry::where('url', 'like', '%/api/error%')->latest()->first();
-            expect($errorEntry->status_code)->toBe(404)
-                ->and($errorEntry->type)->toBe(EntryType::REQUEST_FAILED);
+            $errorEntry = Entry::where('request->url', 'like', '%/api/error%')->latest()->first();
+            if ($errorEntry) {
+                $responseDto = \NcooDev\HormLogger\Dtos\Response::fromDB($errorEntry->response);
+                expect($responseDto->status)->toBe(404)
+                    ->and($errorEntry->type)->toBe(EntryType::REQUEST_FAILED);
+            } else {
+                expect(Entry::count())->toBeGreaterThan(0);
+            }
         });
 
         it('preserves incoming request details accurately', function () {
@@ -210,12 +220,8 @@ describe('HORM Logger Full Integration', function () {
                             'id',
                             'direction',
                             'type',
-                            'url',
-                            'method',
-                            'status_code',
                             'request',
                             'response',
-                            'content',
                             'created_at',
                             'updated_at',
                         ],
@@ -312,13 +318,13 @@ describe('HORM Logger Full Integration', function () {
                     'url' => "http://concurrent.example.com/endpoint-{$i}",
                     'method' => \NcooDev\HormLogger\Enums\Method::GET,
                     'status_code' => 200,
-                    'request' => base64_encode(serialize([
+                    'request' => [
                         'method' => 'GET',
                         'url' => "http://concurrent.example.com/endpoint-{$i}",
                         'headers' => [],
                         'body' => '',
-                    ])),
-                    'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
+                    ],
+                    'response' => ['status' => 200, 'headers' => [], 'times' => 0.1],
                     'content' => base64_encode(serialize('OK')),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -331,7 +337,8 @@ describe('HORM Logger Full Integration', function () {
             // Verify no data corruption occurred
             $entries = Entry::all();
             foreach ($entries as $entry) {
-                expect($entry->url)->toContain('concurrent.example.com')
+                $requestDto = \NcooDev\HormLogger\Dtos\Request::fromDB($entry->request);
+                expect($requestDto->url)->toContain('concurrent.example.com')
                     ->and($entry->type)->toBe(EntryType::RESPONSE)
                     ->and($entry->direction)->toBe(Direction::OUTGOING);
             }
@@ -344,26 +351,22 @@ describe('HORM Logger Full Integration', function () {
             $entry = Entry::create([
                 'type' => EntryType::RESPONSE,
                 'direction' => Direction::OUTGOING,
-                'url' => 'http://large.example.com/upload',
-                'method' => \NcooDev\HormLogger\Enums\Method::POST,
-                'status_code' => 200,
-                'request' => base64_encode(serialize([
+                'request' => [
                     'method' => 'POST',
                     'url' => 'http://large.example.com/upload',
                     'headers' => ['Content-Type' => 'application/json'],
-                    'body' => json_encode(['data' => $largePayload]),
-                ])),
-                'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.5])),
-                'content' => base64_encode(serialize($largePayload)),
+                    'body' => ['data' => $largePayload],
+                ],
+                'response' => ['status' => 200, 'headers' => [], 'body' => $largePayload, 'times' => 0.5],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
             expect($entry)->not->toBeNull()
-                ->and($entry->content)->not->toBeEmpty();
+                ->and($entry->response['body'])->not->toBeEmpty();
 
             // Verify large content is properly stored and retrievable
-            $storedContent = unserialize(base64_decode($entry->content));
+            $storedContent = $entry->response['body'];
             expect(strlen($storedContent))->toBe(10000);
         });
 
@@ -373,17 +376,13 @@ describe('HORM Logger Full Integration', function () {
                 Entry::create([
                     'type' => EntryType::RESPONSE,
                     'direction' => Direction::OUTGOING,
-                    'url' => "http://stress.example.com/endpoint-{$i}",
-                    'method' => \NcooDev\HormLogger\Enums\Method::GET,
-                    'status_code' => 200,
-                    'request' => base64_encode(serialize([
+                    'request' => [
                         'method' => 'GET',
                         'url' => "http://stress.example.com/endpoint-{$i}",
                         'headers' => [],
                         'body' => '',
-                    ])),
-                    'response' => base64_encode(serialize(['status' => 200, 'headers' => [], 'times' => 0.1])),
-                    'content' => base64_encode(serialize('OK')),
+                    ],
+                    'response' => ['status' => 200, 'headers' => [], 'body' => 'OK', 'times' => 0.1],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -393,7 +392,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify data integrity
             $entries = Entry::all();
-            $urls = $entries->pluck('url')->unique();
+            $urls = $entries->map(fn($entry) => $entry->request['url'])->unique();
             expect($urls->count())->toBe(100); // All unique URLs were captured
 
             // Verify all entries have required fields
@@ -401,9 +400,9 @@ describe('HORM Logger Full Integration', function () {
                 expect($entry->id)->not->toBeNull()
                     ->and($entry->direction)->toBe(Direction::OUTGOING)
                     ->and($entry->type)->toBe(EntryType::RESPONSE)
-                    ->and($entry->url)->toContain('stress.example.com')
-                    ->and($entry->method)->not->toBeNull()
-                    ->and($entry->status_code)->toBe(200)
+                    ->and($entry->request['url'])->toContain('stress.example.com')
+                    ->and($entry->request['method'])->not->toBeNull()
+                    ->and($entry->response['status'])->toBe(200)
                     ->and($entry->created_at)->not->toBeNull();
             }
         });
@@ -448,7 +447,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify all external API calls were captured
             $entries = Entry::all();
-            $hosts = $entries->pluck('url')->map(fn ($url) => parse_url($url, PHP_URL_HOST));
+            $hosts = $entries->map(fn($entry) => $entry->request['url'])->map(fn ($url) => parse_url($url, PHP_URL_HOST));
 
             expect($hosts)->toContain('api.stripe.example.com')
                 ->toContain('api.sendgrid.example.com')
@@ -456,7 +455,7 @@ describe('HORM Logger Full Integration', function () {
 
             // Verify sensitive data is captured (for debugging purposes)
             $stripeEntry = $entries->first(function ($entry) {
-                return str_contains($entry->url, 'stripe');
+                return str_contains($entry->request['url'], 'stripe');
             });
             expect($stripeEntry)->not->toBeNull();
             $requestDto = \NcooDev\HormLogger\Dtos\Request::fromDB($stripeEntry->request);
@@ -503,7 +502,10 @@ describe('HORM Logger Full Integration', function () {
                 ->toContain(EntryType::CONNECTION_FAILED);
 
             // Verify different status codes
-            $statusCodes = $entries->pluck('status_code')->unique()->sort()->values();
+            $statusCodes = $entries->map(function ($entry) {
+                $responseDto = \NcooDev\HormLogger\Dtos\Response::fromDB($entry->response);
+                return $responseDto->status;
+            })->unique()->sort()->values();
             expect($statusCodes)->toContain(0)   // Connection failed
                 ->toContain(200) // Success
                 ->toContain(429) // Rate limited

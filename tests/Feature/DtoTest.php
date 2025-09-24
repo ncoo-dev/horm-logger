@@ -186,8 +186,8 @@ describe('HORM Logger DTOs', function () {
             $entry = Entry::create([
                 'type' => \NcooDev\HormLogger\Enums\EntryType::RESPONSE,
                 'direction' => \NcooDev\HormLogger\Enums\Direction::OUTGOING,
-                'request' => json_encode($requestDto->toArray()),
-                'response' => json_encode($responseDto->toArray()),
+                'request' => $requestDto->toArray(),
+                'response' => $responseDto->toArray(),
             ]);
 
             $requestDto = RequestDto::fromDB($entry->request);

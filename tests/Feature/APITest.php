@@ -113,12 +113,8 @@ describe('HORM Logger API Endpoint', function () {
                             ->where('id', $entryCurrent->id)
                             ->where('type', $entryCurrent->type->value)
                             ->where('direction', $entryCurrent->direction->value)
-                            ->where('url', $entryCurrent->url)
-                            ->where('status_code', $entryCurrent->status_code)
-                            ->where('method', $entryCurrent->method->value)
                             ->where('request', $entryCurrent->request)
                             ->where('response', $entryCurrent->response)
-                            ->where('content', $entryCurrent->content)
                             ->where('created_at', $entryCurrent->created_at->format('Y-m-d H:i:s'))
                             ->where('updated_at', $entryCurrent->updated_at->format('Y-m-d H:i:s'));
                     });

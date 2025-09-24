@@ -29,39 +29,9 @@ class Entry extends Model
     protected $casts = [
         'type' => EntryType::class,
         'direction' => Direction::class,
+        'request' => 'array',
+        'response' => 'array',
     ];
-
-    /**
-     * Get the request attribute as array.
-     */
-    public function getRequestAttribute($value): ?array
-    {
-        if (is_null($value)) {
-            return null;
-        }
-
-        if (is_array($value)) {
-            return $value;
-        }
-
-        return json_decode($value, true);
-    }
-
-    /**
-     * Get the response attribute as array.
-     */
-    public function getResponseAttribute($value): ?array
-    {
-        if (is_null($value)) {
-            return null;
-        }
-
-        if (is_array($value)) {
-            return $value;
-        }
-
-        return json_decode($value, true);
-    }
 
     public function getConnectionName(): string
     {

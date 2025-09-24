@@ -73,9 +73,8 @@ describe('Entry Model', function () {
 
         it('stores JSON data in request field', function () {
             $testData = ['method' => 'GET', 'headers' => ['Content-Type' => 'application/json']];
-            $json = json_encode($testData);
 
-            $entry = Entry::factory()->create(['request' => $json]);
+            $entry = Entry::factory()->create(['request' => $testData]);
 
             expect($entry->request)->toBe($testData);
         });
@@ -173,8 +172,8 @@ describe('Entry Model', function () {
             $data = [
                 'direction' => Direction::INCOMING,
                 'type' => EntryType::RESPONSE,
-                'request' => json_encode(['test' => 'data']),
-                'response' => json_encode(['result' => 'success']),
+                'request' => ['test' => 'data'],
+                'response' => ['result' => 'success'],
             ];
 
             $entry = Entry::create($data);
@@ -209,7 +208,7 @@ describe('Entry Model', function () {
     describe('Validation and Data Integrity', function () {
         it('handles empty and null response gracefully', function () {
             $entryWithNull = Entry::factory()->create(['response' => null]);
-            $entryWithEmpty = Entry::factory()->create(['response' => json_encode([])]);
+            $entryWithEmpty = Entry::factory()->create(['response' => []]);
 
             expect($entryWithNull->response)->toBeNull();
             expect($entryWithEmpty->response)->toBe([]);

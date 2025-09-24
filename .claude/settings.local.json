@@ -4,7 +4,8 @@
       "Bash(vendor/bin/pest:*)",
       "Bash(vendor/bin/pint:*)",
       "Bash(php:*)",
-      "Bash(composer update:*)"
+      "Bash(composer update:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []
