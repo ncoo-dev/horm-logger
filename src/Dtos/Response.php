@@ -16,14 +16,19 @@ class Response
     public static function fromHttpClientResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response): self
     {
         $body = $response->body();
-        if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
-            $body = $decoded;
+        
+        // Ensure UTF-8 encoding
+        if (is_string($body)) {
+            $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
+            if (($decoded = json_decode($body, true)) !== null) {
+                $body = $decoded;
+            }
         }
 
         return new self(
-            headers: $response->headers(),
+            headers: self::sanitizeHeaders($response->headers()),
             status: $response->status(),
-            body: $body,
+            body: self::sanitizeData($body),
             times: $response->transferStats?->getTransferTime(),
         );
     }
@@ -31,14 +36,19 @@ class Response
     public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?float $times = null): self
     {
         $body = $response->getContent();
-        if (is_string($body) && ($decoded = json_decode($body, true)) !== null) {
-            $body = $decoded;
+        
+        // Ensure UTF-8 encoding
+        if (is_string($body)) {
+            $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
+            if (($decoded = json_decode($body, true)) !== null) {
+                $body = $decoded;
+            }
         }
 
         return new self(
-            headers: $response->headers->all(),
+            headers: self::sanitizeHeaders($response->headers->all()),
             status: $response->status(),
-            body: $body,
+            body: self::sanitizeData($body),
             times: $times,
         );
     }
@@ -77,5 +87,38 @@ class Response
             'body' => $this->body,
             'times' => $this->times,
         ];
+    }
+
+    /**
+     * Sanitize data to ensure UTF-8 encoding
+     */
+    private static function sanitizeData(mixed $data): mixed
+    {
+        if (is_string($data)) {
+            // Remove invalid UTF-8 characters
+            $data = mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+            // Remove non-printable characters except for newlines and tabs
+            $data = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $data);
+            return $data;
+        }
+        
+        if (is_array($data)) {
+            return array_map([self::class, 'sanitizeData'], $data);
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Sanitize headers to ensure UTF-8 encoding
+     */
+    private static function sanitizeHeaders(array $headers): array
+    {
+        return array_map(function ($value) {
+            if (is_array($value)) {
+                return array_map([self::class, 'sanitizeData'], $value);
+            }
+            return self::sanitizeData($value);
+        }, $headers);
     }
 }

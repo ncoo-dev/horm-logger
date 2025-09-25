@@ -16,16 +16,22 @@ class HormLogConnectionFailed
     public function handle(ConnectionFailed $connectionFailed)
     {
 
-        $requestData = collect(DataObfuscator::obfuscate(Request::fromHttpClientRequest($connectionFailed->request)->toArray()))->toJson();
+        $requestData = DataObfuscator::obfuscate(Request::fromHttpClientRequest($connectionFailed->request)->toArray());
+
+        // Ensure UTF-8 encoding for exception message and trace
+        $exceptionMessage = mb_convert_encoding($connectionFailed->exception->getMessage(), 'UTF-8', 'UTF-8');
+        $exceptionTrace = mb_convert_encoding($connectionFailed->exception->getTraceAsString(), 'UTF-8', 'UTF-8');
+        $responseData = [
+            'error' => $exceptionMessage,
+            'trace' => $exceptionTrace,
+            'status' => $connectionFailed->exception->getCode(),
+        ];
 
         (HormLoggerServiceProvider::determineEntryModel())::create([
             'type' => EntryType::CONNECTION_FAILED,
             'direction' => Direction::OUTGOING,
-            'url' => $connectionFailed->request->url(),
-            'status_code' => $connectionFailed->exception->getCode(),
-            'method' => $connectionFailed->request->method(),
             'request' => $requestData,
-            'response' => $connectionFailed->exception->getMessage().'\r\n'.$connectionFailed->exception->getTraceAsString(),
+            'response' => $responseData,
         ]);
     }
 }
