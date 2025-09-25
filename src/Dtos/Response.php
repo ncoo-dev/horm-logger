@@ -16,7 +16,7 @@ class Response
     public static function fromHttpClientResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response): self
     {
         $body = $response->body();
-        
+
         // Ensure UTF-8 encoding
         if (is_string($body)) {
             $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
@@ -36,7 +36,7 @@ class Response
     public static function fromHttpResponse(\Illuminate\Http\Response|\Illuminate\Http\Client\Response|JsonResponse $response, ?float $times = null): self
     {
         $body = $response->getContent();
-        
+
         // Ensure UTF-8 encoding
         if (is_string($body)) {
             $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
@@ -99,13 +99,14 @@ class Response
             $data = mb_convert_encoding($data, 'UTF-8', 'UTF-8');
             // Remove non-printable characters except for newlines and tabs
             $data = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $data);
+
             return $data;
         }
-        
+
         if (is_array($data)) {
             return array_map([self::class, 'sanitizeData'], $data);
         }
-        
+
         return $data;
     }
 
@@ -118,6 +119,7 @@ class Response
             if (is_array($value)) {
                 return array_map([self::class, 'sanitizeData'], $value);
             }
+
             return self::sanitizeData($value);
         }, $headers);
     }
