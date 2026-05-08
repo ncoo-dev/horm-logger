@@ -2,6 +2,16 @@
 
 All notable changes to `horm-logger` will be documented in this file.
 
+## 1.5.0 - 2026-05-08
+
+### What's Changed
+
+* chore(deps): bump dependabot/fetch-metadata from 2.4.0 to 2.5.0 by @dependabot[bot] in https://github.com/ncoo-dev/horm-logger/pull/16
+
+Laravel13
+
+**Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.4.2...1.5.0
+
 ## 1.4.2 - 2025-09-25
 
 **Full Changelog**: https://github.com/ncoo-dev/horm-logger/compare/1.4.1...1.4.2
