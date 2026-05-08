@@ -6,7 +6,8 @@
       "Bash(php:*)",
       "Bash(composer update:*)",
       "Bash(sed:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
