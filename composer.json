@@ -24,7 +24,7 @@
         "laravel/laravel": "^11.1|^12.0|^13.0",
         "laravel/pint": "^1.0",
         "orchestra/testbench": "^9.2|^10.0|^11.0",
-        "pestphp/pest": "^2.20|^3.0",
+        "pestphp/pest": "^4.7.2",
         "pestphp/pest-plugin-laravel": "^2.4|^4.0",
         "spatie/pest-plugin-test-time": "^2.1",
         "spatie/ray": "^1.28"
